@@ -18,6 +18,10 @@
 
 ### Deploy my site
 
+### Add webmentions
+
+### Join the Fediverse!
+
 ## API
 
 ### Plugin config

@@ -1,18 +1,18 @@
 import { z } from "../../deps.ts";
+import { MdastNode } from "../../parsers/markdown/MdastNode.ts";
 
-export interface ReadData {
+export interface FileHandle {
   filename: string;
   extension: string;
   defaultSlug: string;
-  data: Uint8Array;
+  getData: () => Uint8Array;
 }
 
-interface OnReadOptions {
-  isUpdate: boolean;
-}
-
-interface BaseSchema {
+export interface BaseSchema {
   slug: string;
+  rev: string;
+  filename: string;
+  extension: string;
 }
 
 export interface Model<S extends BaseSchema> {
@@ -20,12 +20,9 @@ export interface Model<S extends BaseSchema> {
 
   schema: z.Schema<S>;
 
-  onRead?: (
-    file: ReadData,
-    opts: OnReadOptions,
-  ) => Promise<S | S[] | null>;
+  getResource?: (file: FileHandle) => Promise<S | null>;
 
-  onDelete?: (slug: string) => Promise<void>;
+  getData?: (file: FileHandle) => MdastNode;
 }
 
 // deno-lint-ignore no-explicit-any

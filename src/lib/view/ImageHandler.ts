@@ -1,12 +1,10 @@
 import { Handler } from "$fresh/server.ts";
-import { exists } from "$std/fs/exists.ts";
 import { FreshContext, z } from "../../deps.ts";
 import { warn } from "../../log.ts";
 import { getErrorMessage, HttpError } from "../../errors.ts";
 import { parseQuery } from "../../parsers/index.ts";
-import { Repository } from "../../storage/db.ts";
-import { getAttachmentPath, getContentPath } from "../../storage/disk.ts";
-import { image } from "../model/index.ts";
+import { FoblogContext } from "foblog";
+import { getImage } from "../index.ts";
 
 interface ImageParams {
   slug: string;
@@ -14,7 +12,10 @@ interface ImageParams {
 }
 
 interface ImageHandlerOptions {
-  decodeUrl: (url: string | URL, context: FreshContext) => ImageParams;
+  decodeUrl: (
+    url: string | URL,
+    context: FreshContext<FoblogContext>,
+  ) => ImageParams;
 }
 
 const queryParser = parseQuery(z.object({
@@ -35,13 +36,13 @@ const defaultImageHandlerOptions: ImageHandlerOptions = {
 
 export const ImageHandler = (
   options?: Partial<ImageHandlerOptions>,
-): Handler => {
+): Handler<unknown, FoblogContext> => {
   const { decodeUrl } = {
     ...defaultImageHandlerOptions,
     ...options,
   };
 
-  return async (request, context) => {
+  return async (request, context: FreshContext<FoblogContext>) => {
     let params: ImageParams;
     try {
       params = decodeUrl(request.url, context);
@@ -53,33 +54,10 @@ export const ImageHandler = (
       ).toHttp();
     }
 
-    const imageData = await Repository(image).get(params.slug);
-
-    if (!imageData) {
-      warn(`Image ${params.slug} not found`);
+    const attachment = await getImage(context.state)(params.slug, params.width);
+    if (!attachment) {
       return new HttpError(404).toHttp();
     }
-
-    const sizes = imageData.sizes.slice().sort((a, b) => a.size - b.size);
-    const size = typeof params.width === "number"
-      ? sizes.find((size) => size.size >= (params.width as number))
-      : null;
-
-    const attachmentPath = size
-      ? getAttachmentPath(size?.filename, context)
-      : null;
-
-    if (attachmentPath && await exists(attachmentPath)) {
-      const file = await Deno.open(attachmentPath, { read: true });
-      return new Response(file.readable);
-    }
-
-    const originalFilePath = getContentPath(imageData.originalFilename);
-    if (await exists(originalFilePath)) {
-      const file = await Deno.open(originalFilePath, { read: true });
-      return new Response(file.readable);
-    }
-
-    return new HttpError(404).toHttp();
+    return new Response(attachment);
   };
 };

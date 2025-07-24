@@ -1,7 +1,7 @@
-import { assertEquals } from "assert/assert_equals.ts";
-import { assertThrows } from "assert/assert_throws.ts";
-import { z } from "../../deps.ts";
+import { assert, z } from "../../deps.ts";
 import { parseQuery } from "../parseQuery.ts";
+
+const { assertEquals, assertThrows } = assert;
 
 const parser = parseQuery(z.object({
   isPublished: z.coerce.boolean(),

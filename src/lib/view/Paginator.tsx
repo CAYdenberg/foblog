@@ -22,14 +22,14 @@ export const Paginator: FunctionComponent<PaginatorProps> = (
   { url, summary, className },
 ) => {
   return (
-    <div className={cn(className?.root, "wf-paginator")}>
+    <div className={cn(className?.root, "fob-paginator")}>
       <a href={url.first || undefined}>
         <Icon icon={ChevronFirst} />
       </a>
       <a href={url.prev || undefined}>
         <Icon icon={ChevronLeft} />
       </a>
-      <p className={cn(className?.text, "wf-paginator__text")}>
+      <p className={cn(className?.text, "fob-paginator-text")}>
         <span>Showing items</span> <span>{summary.from}—{summary.to}</span>
         {summary.of ? <span>{` `} of {summary.of}.</span> : <span>.</span>}
       </p>

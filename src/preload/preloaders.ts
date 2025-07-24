@@ -1,7 +1,6 @@
 import { Preloader } from "./types.ts";
 import { config } from "../plugin/config.ts";
-import { getImage } from "../lib/index.ts";
-import { ResourceFinder } from "./ResourceFinder.ts";
+import { ImageTy } from "../lib/index.ts";
 
 export const preloadXLinks: Preloader = (node) => {
   if (node.type !== "xlink") return null;
@@ -10,12 +9,10 @@ export const preloadXLinks: Preloader = (node) => {
 
   return {
     key: `xlink:${xlinkNode.filename}`,
-    query: async () => {
-      const findResources = await ResourceFinder();
-
-      const resource = findResources(xlinkNode.filename).find((resource) => {
-        return ["post", "page"].includes(resource.type);
-      });
+    query: async (_request, context) => {
+      const resource = await context.state.getResourceFromXRef(
+        xlinkNode.filename,
+      );
 
       if (!resource) {
         throw new Error("NotFound");
@@ -38,18 +35,18 @@ export const preloadAttachmentImages: Preloader = (node) => {
 
   return {
     key: `image:${imageNode.filename}${imageNode.extension}`,
-    query: async () => {
-      const findResources = await ResourceFinder();
-
-      const resource = findResources(imageNode.filename, imageNode.extension)
-        .find((resource) => {
-          return resource.type === "image";
-        });
+    query: async (_request, context) => {
+      const resource = await context.state.getResourceFromXRef(
+        imageNode.filename,
+      );
       if (!resource) {
         throw new Error("NotFound");
       }
 
-      const image = await getImage(resource.slug);
+      const image = await context.state.getItem<ImageTy>(
+        "image",
+        resource.slug,
+      );
       if (!image) {
         throw new Error("NotFound");
       }

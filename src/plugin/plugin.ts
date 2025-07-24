@@ -1,33 +1,53 @@
 /// <reference lib="deno.unstable" />
 
 import { FreshContext, Plugin } from "$fresh/server.ts";
-import { log } from "../log.ts";
-import { createOutDirIfNotExists } from "../storage/disk.ts";
-import { config, ConfigSetter, setConfig, setFreshConfig } from "./config.ts";
+import { image, page, post } from "../lib/index.ts";
+import { ContentBuilder } from "../storage/ContentBuilder.ts";
+import { Repository } from "../storage/Repository.ts";
+import { ConfigSetter, setConfig, setFreshConfig } from "./config.ts";
+import {
+  createFoblogContextDev,
+  createFoblogContextPrebuilt,
+} from "./context.ts";
+
+let contentBuilder: ContentBuilder;
+const repos = {
+  post: new Repository(post),
+  page: new Repository(page),
+  image: new Repository(image),
+};
 
 const foblogMiddleware = async (_req: Request, ctx: FreshContext) => {
   setFreshConfig(ctx.config);
-  console.log(config);
 
-  await createOutDirIfNotExists();
+  const context = ctx.config.dev
+    ? createFoblogContextDev(contentBuilder)
+    : createFoblogContextPrebuilt(repos);
+
+  ctx.state = { ...ctx.state, ...context };
 
   return await ctx.next();
 };
 
 export default (config: ConfigSetter): Plugin => {
   setConfig(config);
+  contentBuilder = new ContentBuilder(post, page, image);
 
   return {
     name: "foblog",
 
     buildStart: async (freshConfig) => {
-      setConfig(config);
       setFreshConfig(freshConfig);
-
-      log("Building...");
-      await createOutDirIfNotExists();
+      await contentBuilder.init();
+      await contentBuilder.buildAll();
     },
 
     middlewares: [{ middleware: { handler: foblogMiddleware }, path: "" }],
+    islands: {
+      baseLocation: import.meta.url,
+      paths: [
+        "../lib/view/ImgLazy.tsx",
+      ],
+    },
   };
 };

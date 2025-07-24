@@ -34,6 +34,13 @@ export const getContentType = (content: Root): string | undefined => {
   return data.type || undefined;
 };
 
+export const getPlainText = (node: MdastNode) => {
+  const selector = selectNodes(flattenTree(node));
+  return selector<Text>("text")
+    .map((node) => node.value)
+    .join("\n\n");
+};
+
 export const getPostMetadata = (content: Root): Partial<PostTy> => {
   const selector = selectNodes(flattenTree(content));
   const yaml = selector<Yaml>("yaml");
@@ -41,16 +48,11 @@ export const getPostMetadata = (content: Root): Partial<PostTy> => {
   // deno-lint-ignore no-explicit-any
   const data = yaml?.length ? parseYaml(yaml[0].value) : {} as any;
 
-  const content_text = selector<Text>("text")
-    .map((node) => node.value)
-    .join("\n\n");
-
   return {
     summary: data.summary || undefined,
     image: data.image || undefined,
     banner_image: data.banner_image || undefined,
     date_published: normalDate(data.date_published) || undefined,
     external_url: data.external_url || undefined,
-    content_text,
   };
 };

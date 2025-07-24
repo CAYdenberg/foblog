@@ -1,12 +1,10 @@
-import { crypto, encodeHex, path, z } from "../deps.ts";
-import { Model } from "../lib/model/Model.ts";
+import { crypto, encodeHex, path } from "../deps.ts";
 import { config } from "../plugin/config.ts";
 import { exists } from "$std/fs/exists.ts";
 import { slugifyAsPath } from "../parsers/index.ts";
-import { Repository } from "./db.ts";
 
 const IGNORE_DIR = ["templates", ".obsidian"];
-const INDICES_OUT_DIR = "indices";
+const REPO_OUT_DIR = "repo";
 const ATTACHMENT_OUT_DIR = "attachments";
 
 export const getContentDir = () => path.join(Deno.cwd(), config.contentDir);
@@ -16,29 +14,16 @@ export const getContentPath = (filename: string, context?: string) =>
     ? path.join(getContentDir(), context, filename)
     : path.join(getContentDir(), filename);
 
-const LsSchema = z.object({
-  slug: z.string(),
-  files: z.array(z.object({
-    basename: z.string(),
-    extension: z.string(),
-    checksum: z.string(),
-    resources: z.array(z.object({
-      type: z.string(),
-      slug: z.string(),
-    })),
-  })),
-});
-
-export type Ls = z.infer<typeof LsSchema>;
-export type LsEntry = Ls["files"][number];
+export interface LsEntry {
+  basename: string;
+  extension: string;
+  checksum: string;
+  resources: Array<{
+    type: string;
+    slug: string;
+  }>;
+}
 export type Resource = LsEntry["resources"][number];
-
-export const LsModel: Model<Ls> = {
-  name: "ls",
-  schema: LsSchema,
-};
-
-export const LsRepository = Repository(LsModel);
 
 export const getChecksum = async (data: Uint8Array): Promise<string> => {
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -48,7 +33,7 @@ export const getChecksum = async (data: Uint8Array): Promise<string> => {
 export const buildLs = async (
   forEachFile: (entry: Deno.DirEntry, context?: string) => Promise<LsEntry>,
   contentDir = getContentDir(),
-): Promise<Ls> => {
+): Promise<LsEntry[]> => {
   const dir = Deno.readDir(contentDir);
 
   let entries: LsEntry[] = [];
@@ -63,15 +48,11 @@ export const buildLs = async (
         forEachFile,
         path.join(contentDir, dirEntry.name),
       );
-      entries = [...entries, ...result.files];
+      entries = [...entries, ...result];
     }
   }
 
-  const finishTime: number = Date.now();
-  return {
-    slug: `${finishTime}`,
-    files: entries,
-  };
+  return entries;
 };
 
 export const openFile = async (
@@ -79,7 +60,7 @@ export const openFile = async (
   context?: string,
 ) => {
   const fullPath = typeof entry === "string"
-    ? entry
+    ? getContentPath(entry)
     : getContentPath(entry.name, context);
 
   const extension = path.extname(fullPath);
@@ -99,25 +80,25 @@ export const openFile = async (
   };
 };
 
-export const findPrevEntry = (prev: Ls | null) =>
+export const findPrevEntry = (prev: LsEntry[] | null) =>
 (
   basename: string,
   extension: string,
 ): LsEntry | null => {
-  return prev?.files.find((entry) =>
+  return prev?.find((entry) =>
     entry.basename == basename && entry.extension === extension
   ) || null;
 };
 
-const smooshResources = (ls: Ls): Resource[] => {
-  return ls.files.reduce((acc, file) => {
+export const smooshResources = (ls: LsEntry[]): Resource[] => {
+  return ls.reduce((acc, file) => {
     return [...acc, ...file.resources];
   }, [] as Resource[]);
 };
 
 export const resourcesToDelete = (
-  prev: Ls | null,
-  next: Ls,
+  prev: LsEntry[] | null,
+  next: LsEntry[],
 ): Resource[] => {
   if (!prev) return [];
 
@@ -142,7 +123,7 @@ export const getAttachmentPath = (filename: string) => {
 };
 
 export const getIndicesPath = (filename: string) => {
-  return path.join(getOutDir(), INDICES_OUT_DIR, filename);
+  return path.join(getOutDir(), REPO_OUT_DIR, filename);
 };
 
 const createDirsRecursively = async (...paths: string[]) => {
@@ -153,7 +134,6 @@ const createDirsRecursively = async (...paths: string[]) => {
   if (dirExists) return;
   await createDirsRecursively(...paths.slice(0, paths.length - 1));
   await Deno.mkdir(dirPath);
-  return;
 };
 
 export const createOutDirIfNotExists = async () => {
@@ -168,6 +148,6 @@ export const createOutDirIfNotExists = async () => {
   await createDirsRecursively(
     freshConfig.build.outDir,
     outDir,
-    INDICES_OUT_DIR,
+    REPO_OUT_DIR,
   );
 };

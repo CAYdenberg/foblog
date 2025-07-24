@@ -1,12 +1,21 @@
-import { warn } from "../../../log.ts";
-import { Repository } from "../../../storage/db.ts";
-import { image } from "./image.ts";
+import { FoblogContext } from "foblog";
+import { ImageTy } from "./image.ts";
 
-export const getImage = (slug: string) => {
-  return Repository(image).get(slug).then((result) => {
-    if (!result) {
-      warn(`Image ${slug} not found in database`);
+export const getImage =
+  (fob: FoblogContext) => async (slug: string, width?: number) => {
+    const data = await fob.getItem<ImageTy>("image", slug);
+    if (!data) return null;
+
+    if (typeof width === "undefined" || !data.variants) {
+      return fob.getAttachment("image", data, null);
     }
-    return result;
-  });
-};
+
+    // sort the sizes in ASC order, then find the first one that is larger
+    // than the reqeusted size.
+    const neededSize = data.variants?.map((variant) => parseInt(variant))
+      .filter((size) => !isNaN(size)).sort((a, b) => a - b).find((size) =>
+        size >= width
+      );
+
+    return fob.getAttachment("image", data, neededSize?.toString() || null);
+  };

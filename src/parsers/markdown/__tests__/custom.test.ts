@@ -1,7 +1,8 @@
-import { assertEquals } from "assert/assert_equals.ts";
-
+import { assert } from "../../../deps.ts";
 import type { MdastNode } from "../MdastNode.ts";
 import { parseCustom, parseShortcodeAttr } from "../custom.ts";
+
+const { assertEquals } = assert;
 
 Deno.test("parse XLinks", () => {
   const input =

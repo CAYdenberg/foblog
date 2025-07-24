@@ -1,18 +1,23 @@
 import { z } from "../../deps.ts";
+import { ContentRoot } from "../../mod.ts";
 
-export interface ReadData {
+export interface FileHandle {
   filename: string;
   extension: string;
   defaultSlug: string;
   data: Uint8Array;
 }
 
-interface OnReadOptions {
-  isUpdate: boolean;
+export interface BaseSchema {
+  slug: string;
+  filename: string;
+  extension: string;
+  variants?: string[];
 }
 
-interface BaseSchema {
-  slug: string;
+export interface Attachment {
+  variant: string;
+  data: Uint8Array;
 }
 
 export interface Model<S extends BaseSchema> {
@@ -20,12 +25,14 @@ export interface Model<S extends BaseSchema> {
 
   schema: z.Schema<S>;
 
-  onRead?: (
-    file: ReadData,
-    opts: OnReadOptions,
-  ) => Promise<S | S[] | null>;
+  resourcesFromFile: (file: FileHandle) => S | S[] | null;
 
-  onDelete?: (slug: string) => Promise<void>;
+  getContent?: (
+    resource: S,
+    file: FileHandle,
+  ) => Promise<ContentRoot>;
+
+  getAttachments?: (resource: S, file: FileHandle) => Promise<Attachment[]>;
 }
 
 // deno-lint-ignore no-explicit-any

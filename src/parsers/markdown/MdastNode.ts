@@ -124,8 +124,7 @@ export interface Attachment {
   filename: string;
   extension: string;
   alt?: string;
-  url?: string;
-  image?: ImageTy;
+  image?: ImageTy | null;
 }
 
 export type Inline =

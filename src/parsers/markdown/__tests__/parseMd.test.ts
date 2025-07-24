@@ -1,9 +1,10 @@
-import { assertEquals } from "assert/assert_equals.ts";
-import { path } from "../../../deps.ts";
+import { assert, path } from "../../../deps.ts";
 import { parseMd } from "../parseMd.ts";
 import { flattenTree, getPostMetadata } from "../metadata.ts";
 import { Attachment, Shortcode, XLink } from "../MdastNode.ts";
 import { selectNodes } from "../index.ts";
+
+const { assertEquals } = assert;
 
 const __dirname = new URL(".", import.meta.url).pathname;
 const text = await Deno.readTextFile(path.join(__dirname, "testpost.md"));

@@ -16,7 +16,8 @@ import {
   PreloadAssemblerTy,
 } from "../../preload/index.ts";
 import { PreloadFulfilled } from "../../preload/types.ts";
-import { ImgLazyResponsive } from "./ImgLazyResponsive.tsx";
+import { ImgLazy } from "./ImgLazy.tsx";
+import { config } from "../../plugin/config.ts";
 
 // We use "any" here for props, because we do not know the type of the
 // components which are added by the user
@@ -34,7 +35,7 @@ interface CreateMdOptions {
 export const CreateMd = (
   options?: Partial<CreateMdOptions>,
 ) => {
-  const { shortcodeComponents, preloadAssembler, imageSizes } = {
+  const { shortcodeComponents, preloadAssembler } = {
     shortcodeComponents: {},
     preloadAssembler: defaultPreloadAssembler,
     ...options,
@@ -143,11 +144,11 @@ export const CreateMd = (
 
       case "attachment": {
         const trNode = preloadAssembler.transform(node, preloads);
+
         return (
-          <ImgLazyResponsive
-            image={trNode.image || null}
+          <ImgLazy
+            src={config.images.permalink(trNode.image?.slug || "")}
             alt={trNode.alt || ""}
-            sizes={imageSizes}
           />
         );
       }

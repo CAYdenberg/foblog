@@ -1,4 +1,4 @@
-import { FreshConfig } from "$fresh/server.ts";
+import { ResolvedFreshConfig } from "$fresh/server.ts";
 import { Author } from "../mod.ts";
 import { stringifyQuery } from "../parsers/index.ts";
 
@@ -32,7 +32,7 @@ export interface PluginConfig {
     permalink: (slug: string, width?: number) => string;
   };
 
-  freshConfig?: FreshConfig;
+  freshConfig?: ResolvedFreshConfig;
 }
 
 const DEFAULT_CONFIG: PluginConfig = {
@@ -87,7 +87,7 @@ export const setConfig = (
   return config;
 };
 
-export const setFreshConfig = (freshConfig: FreshConfig) => {
+export const setFreshConfig = (freshConfig: ResolvedFreshConfig) => {
   config = {
     ...config,
     freshConfig,

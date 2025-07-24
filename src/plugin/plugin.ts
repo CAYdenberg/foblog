@@ -5,9 +5,30 @@ import { log } from "../log.ts";
 import { createOutDirIfNotExists } from "../storage/disk.ts";
 import { config, ConfigSetter, setConfig, setFreshConfig } from "./config.ts";
 
+class Context {
+  public isSetup: boolean;
+
+  constructor() {
+    this.isSetup = false;
+  }
+
+  public doSetup() {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        this.isSetup = true;
+        resolve();
+      }, 0);
+    });
+  }
+}
+
+let context: Context;
+
 const foblogMiddleware = async (_req: Request, ctx: FreshContext) => {
   setFreshConfig(ctx.config);
-  console.log(config);
+
+  console.log(context.isSetup);
+  await context.doSetup();
 
   await createOutDirIfNotExists();
 
@@ -16,6 +37,7 @@ const foblogMiddleware = async (_req: Request, ctx: FreshContext) => {
 
 export default (config: ConfigSetter): Plugin => {
   setConfig(config);
+  context = new Context();
 
   return {
     name: "foblog",

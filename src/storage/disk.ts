@@ -133,7 +133,6 @@ const createDirsRecursively = async (...paths: string[]) => {
   if (dirExists) return;
   await createDirsRecursively(...paths.slice(0, paths.length - 1));
   await Deno.mkdir(dirPath);
-  return;
 };
 
 export const createOutDirIfNotExists = async () => {

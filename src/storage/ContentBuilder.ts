@@ -9,9 +9,11 @@ export class ContentBuilder {
 
   constructor(models: AnyModel[]) {}
 
-  public async doBuild() {}
+  public async init() {}
 
   public watch() {}
 
-  public getRepository(modelName: string) {}
+  public async buildAll() {}
+
+  public async getRepository(modelName: string) {}
 }

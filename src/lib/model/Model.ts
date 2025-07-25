@@ -1,6 +1,5 @@
 import { z } from "../../deps.ts";
-import { MdastNode } from "../../parsers/markdown/MdastNode.ts";
-import { PreloadPending } from "../../preload/types.ts";
+import type * as Mdast from "../../parsers/markdown/MdastNode.ts";
 
 export interface FileHandle {
   filename: string;
@@ -27,13 +26,12 @@ export interface Model<S extends BaseSchema> {
 
   resourcesFromFile: (file: FileHandle) => S | S[] | null;
 
-  dataFromResource?: (
+  contentFromResource?: (
     resource: S,
     file: FileHandle,
   ) => Promise<
     {
-      contents?: MdastNode;
-      preloads?: PreloadPending[];
+      content?: Mdast.Root;
       attachments?: Attachment[];
     }
   >;

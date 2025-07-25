@@ -1,10 +1,14 @@
 import { FreshContext, Handler } from "../../deps.ts";
+import { FoblogContext } from "../../plugin/index.ts";
 import { preloadAssembler } from "../../preload/index.ts";
 import { PreloadFulfilled } from "../../preload/types.ts";
 import { getPage, PageTy } from "../index.ts";
 
 interface PageHandlerOptions {
-  decodeUrl: (url: string | URL, context: FreshContext) => string;
+  decodeUrl: (
+    url: string | URL,
+    context: FreshContext<FoblogContext>,
+  ) => string;
 }
 
 const defaultPageHandlerOptions: PageHandlerOptions = {
@@ -21,7 +25,7 @@ export interface PageHandlerProps {
 
 export const PageHandler = (
   options?: Partial<PageHandlerOptions>,
-): Handler<PageHandlerProps> => {
+): Handler<PageHandlerProps, FoblogContext> => {
   const { decodeUrl } = { ...defaultPageHandlerOptions, ...options };
 
   return async (request, context) => {

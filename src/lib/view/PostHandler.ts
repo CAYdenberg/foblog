@@ -27,6 +27,8 @@ export const PostHandler = (
   return async (request, context) => {
     const slug = decodeUrl(request.url, context);
 
+    const page = await context.get;
+
     const post = await getPost(slug);
     if (!post) {
       return context.renderNotFound();

@@ -1,10 +1,8 @@
-import { findPrevEntry, LsRepository } from "../storage/disk.ts";
+import { findPrevEntry, LsEntry } from "../storage/disk.ts";
 
-export const ResourceFinder = async () => {
-  const prevLs = await LsRepository.get("ls");
-  if (!prevLs) {
-    throw new Error("System build not completed");
-  }
+export const ResourceFinder = () => {
+  // TODO: need to figure out how to get a resource finder in this context
+  const prevLs: LsEntry[] = [];
   const compareEntries = findPrevEntry(prevLs);
 
   return (basename: string, extension?: string) => {

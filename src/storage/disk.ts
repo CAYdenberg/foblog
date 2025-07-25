@@ -17,6 +17,7 @@ export const getContentPath = (filename: string, context?: string) =>
 export interface LsEntry {
   basename: string;
   extension: string;
+  checksum: string;
   resources: Array<{
     type: string;
     slug: string;

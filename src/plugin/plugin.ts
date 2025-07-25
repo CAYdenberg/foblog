@@ -1,34 +1,16 @@
 /// <reference lib="deno.unstable" />
 
 import { FreshContext, Plugin } from "$fresh/server.ts";
+import { image, page, post } from "../lib/index.ts";
 import { log } from "../log.ts";
+import { ContentBuilder } from "../storage/ContentBuilder.ts";
 import { createOutDirIfNotExists } from "../storage/disk.ts";
 import { config, ConfigSetter, setConfig, setFreshConfig } from "./config.ts";
 
-class Context {
-  public isSetup: boolean;
-
-  constructor() {
-    this.isSetup = false;
-  }
-
-  public doSetup() {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        this.isSetup = true;
-        resolve();
-      }, 0);
-    });
-  }
-}
-
-let context: Context;
+let contentBuilder: ContentBuilder;
 
 const foblogMiddleware = async (_req: Request, ctx: FreshContext) => {
   setFreshConfig(ctx.config);
-
-  console.log(context.isSetup);
-  await context.doSetup();
 
   await createOutDirIfNotExists();
 
@@ -37,17 +19,14 @@ const foblogMiddleware = async (_req: Request, ctx: FreshContext) => {
 
 export default (config: ConfigSetter): Plugin => {
   setConfig(config);
-  context = new Context();
+  contentBuilder = new ContentBuilder(post, page, image);
 
   return {
     name: "foblog",
 
     buildStart: async (freshConfig) => {
-      setConfig(config);
       setFreshConfig(freshConfig);
-
-      log("Building...");
-      await createOutDirIfNotExists();
+      await contentBuilder.init();
     },
 
     middlewares: [{ middleware: { handler: foblogMiddleware }, path: "" }],

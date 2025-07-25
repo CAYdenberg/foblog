@@ -1,4 +1,9 @@
-import { BaseSchema, Model } from "../lib/model/Model.ts";
+import { BaseSchema, FileHandle, Model } from "../lib/model/Model.ts";
+
+interface UpsertOptions {
+  isUpdate: boolean;
+  buildAttachments: boolean;
+}
 
 export class Repository<S extends BaseSchema> {
   private model: Model<S>;
@@ -9,7 +14,7 @@ export class Repository<S extends BaseSchema> {
     this.data = null;
   }
 
-  public async upsertItem(data: S) {}
+  public async upsertDataFromFile(file: FileHandle, { isUpdate: boolean }) {}
 
   public async deleteItem(slug: string) {}
 

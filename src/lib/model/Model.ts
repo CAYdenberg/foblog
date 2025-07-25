@@ -6,7 +6,7 @@ export interface FileHandle {
   filename: string;
   extension: string;
   defaultSlug: string;
-  getData: () => Promise<Uint8Array>;
+  data: Uint8Array;
 }
 
 export interface BaseSchema {

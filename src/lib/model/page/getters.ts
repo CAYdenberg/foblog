@@ -1,4 +1,6 @@
-import { Repository } from "../../../storage/db.ts";
-import { page } from "./page.ts";
+import { FoblogData } from "../../../plugin/index.ts";
+import { page, PageTy } from "./page.ts";
 
-export const getPage = Repository(page).get;
+export const getPage = (data: FoblogData) => (slug: string) => {
+  return data.getItem<PageTy>("page", slug);
+};

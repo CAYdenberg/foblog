@@ -11,33 +11,33 @@ import { Model } from "../Model.ts";
 export const PageSchema = z.object({
   slug: z.string(),
   title: z.string(),
-  content: z.any(),
+  filename: z.string(),
+  extension: z.string(),
 });
 
-export interface PageTy extends z.infer<typeof PageSchema> {
-  content?: MdastNodeTy.Root;
-}
+export type PageTy = z.infer<typeof PageSchema>;
 
 export const page: Model<PageTy> = {
   name: "page",
   schema: PageSchema,
-  onRead: (file) => {
-    if (file.extension.toLowerCase() !== ".md") return Promise.resolve(null);
+  resourcesFromFile: (file) => {
+    if (file.extension.toLowerCase() !== ".md") return null;
 
     const decoder = new TextDecoder("utf-8");
     const text = decoder.decode(file.data);
     const content = parseMd(text);
     const contentType = getContentType(content);
     if (contentType && contentType !== "Page") {
-      return Promise.resolve(null);
+      return null;
     }
 
     const metadata = getPostMetadata(content);
 
-    return Promise.resolve({
+    return {
       slug: metadata.slug || file.defaultSlug,
       title: disambiguateTitle(file.filename),
-      content,
-    });
+      filename: file.filename,
+      extension: file.extension,
+    };
   },
 };

@@ -90,7 +90,7 @@ export const findPrevEntry = (prev: LsEntry[] | null) =>
   ) || null;
 };
 
-const smooshResources = (ls: LsEntry[]): Resource[] => {
+export const smooshResources = (ls: LsEntry[]): Resource[] => {
   return ls.reduce((acc, file) => {
     return [...acc, ...file.resources];
   }, [] as Resource[]);

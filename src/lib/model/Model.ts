@@ -11,7 +11,6 @@ export interface FileHandle {
 
 export interface BaseSchema {
   slug: string;
-  rev: string;
   filename: string;
   extension: string;
 }
@@ -26,9 +25,9 @@ export interface Model<S extends BaseSchema> {
 
   schema: z.Schema<S>;
 
-  getResource?: (file: FileHandle) => Promise<S | S[] | null>;
+  resourcesFromFile: (file: FileHandle) => S | S[] | null;
 
-  getData?: (
+  dataFromResource?: (
     resource: S,
     file: FileHandle,
   ) => Promise<

@@ -1,4 +1,4 @@
-import { AnyModel, FileHandle } from "../lib/model/Model.ts";
+import { AnyModel, BaseSchema, FileHandle } from "../lib/model/Model.ts";
 import { log } from "../log.ts";
 import {
   buildLs,
@@ -17,19 +17,27 @@ export class ContentBuilder {
 
   constructor(...models: AnyModel[]) {
     this.repositories = models.map((model) => new Repository(model));
+    this.ls = null;
+    this.prevLs = null;
   }
 
   public async init() {
     log("Building...");
     await createOutDirIfNotExists();
-    this.ls = await buildLs(this.buildLsEntryForFile);
+    this.ls = await buildLs((entry, context) =>
+      this.buildLsEntryForFile(entry, context)
+    );
+    return this.ls;
   }
 
   public watch() {}
 
   public async buildAll() {}
 
-  public async getRepository(modelName: string) {}
+  public getRepository<S extends BaseSchema>(modelName: string) {
+    const repo = this.repositories.find((repo) => repo.modelName === modelName);
+    return repo as Repository<S>;
+  }
 
   private async buildLsEntryForFile(
     entry: Deno.DirEntry | string,
@@ -71,22 +79,8 @@ export class ContentBuilder {
     file: FileHandle,
     isUpdate: boolean,
   ): Promise<Resource[]> {
-    return Promise.all(this.repositories.map(async (repo) => {
-      if (!model.onRead) return [];
-
-      const resource = await model.onRead(file, { isUpdate });
-      if (!resource) return Promise.resolve([]);
-      const resources = Array.isArray(resource) ? resource : [resource];
-
-      return Promise.all(
-        resources.map(async (resource) => {
-          await table.upsert(resource.slug, resource);
-          return {
-            type: model.name,
-            slug: resource.slug,
-          };
-        }),
-      );
+    return Promise.all(this.repositories.map((repo) => {
+      return repo.upsertDataFromFile(file);
     })).then((results) => results.flat());
   }
 }

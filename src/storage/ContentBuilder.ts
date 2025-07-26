@@ -21,6 +21,11 @@ export class ContentBuilder {
     this.prevLs = null;
   }
 
+  public getRepository<S extends BaseSchema>(modelName: string) {
+    const repo = this.repositories.find((repo) => repo.modelName === modelName);
+    return repo as Repository<S>;
+  }
+
   public async init() {
     log("Building...");
     await createOutDirIfNotExists();
@@ -33,11 +38,6 @@ export class ContentBuilder {
   public watch() {}
 
   public async buildAll() {}
-
-  public getRepository<S extends BaseSchema>(modelName: string) {
-    const repo = this.repositories.find((repo) => repo.modelName === modelName);
-    return repo as Repository<S>;
-  }
 
   private async buildLsEntryForFile(
     entry: Deno.DirEntry | string,

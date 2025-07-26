@@ -28,9 +28,8 @@ export const getPost = (data: FoblogContext) => (slug: string) => {
   return Promise.all([
     data.getItem<PostTy>("post", slug),
     data.getContent("post", slug),
-  ]).then(([model, content]) => ({
-    ...model,
-    ...content,
-  }))
-    .catch(() => null);
+  ]).then(([model, content]) => {
+    if (!model || !content) return null;
+    return { ...model, ...content };
+  }).catch(() => null);
 };

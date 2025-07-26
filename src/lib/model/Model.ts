@@ -1,5 +1,5 @@
 import { z } from "../../deps.ts";
-import type * as Mdast from "../../parsers/markdown/MdastNode.ts";
+import { ContentRoot } from "../../mod.ts";
 
 export interface FileHandle {
   filename: string;
@@ -31,7 +31,7 @@ export interface Model<S extends BaseSchema> {
     file: FileHandle,
   ) => Promise<
     {
-      content?: Mdast.Root;
+      content?: ContentRoot;
       attachments?: Attachment[];
     }
   >;

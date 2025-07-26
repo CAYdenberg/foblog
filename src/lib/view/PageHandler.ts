@@ -1,4 +1,5 @@
 import { FreshContext, Handler } from "../../deps.ts";
+import { ContentRoot } from "../../mod.ts";
 import { FoblogContext } from "../../plugin/index.ts";
 import { preloadAssembler } from "../../preload/index.ts";
 import { PreloadFulfilled } from "../../preload/types.ts";
@@ -19,7 +20,7 @@ const defaultPageHandlerOptions: PageHandlerOptions = {
 };
 
 export interface PageHandlerProps {
-  page: PageTy;
+  page: PageTy & { content: ContentRoot };
   preloads: PreloadFulfilled[];
 }
 
@@ -31,7 +32,7 @@ export const PageHandler = (
   return async (request, context) => {
     const slug = decodeUrl(request.url, context);
 
-    const page = await getPage(slug);
+    const page = await getPage(context.state)(slug);
     if (!page) {
       return context.renderNotFound();
     }

@@ -1,7 +1,8 @@
 import { FreshContext } from "$fresh/server.ts";
 import { warn } from "../log.ts";
 import { isLeaf } from "../parsers/index.ts";
-import { MdastNodeTy } from "../parsers/markdown/index.ts";
+import type * as MdastNodeTy from "../parsers/markdown/MdastNode.ts";
+import { FoblogContext } from "../plugin/index.ts";
 import {
   Preloader,
   PreloadErrored,
@@ -14,7 +15,7 @@ const runPreloads = (
 ) =>
 (
   request: Request,
-  context: FreshContext,
+  context: FreshContext<FoblogContext>,
 ): Promise<Array<PreloadFulfilled | PreloadErrored>> => {
   const promises = preloads.map((preload) => preload.query(request, context));
 
@@ -72,7 +73,7 @@ export const PreloadAssembler = (preloaders: Preloader[]) => {
 
   const assemble = async (
     request: Request,
-    context: FreshContext,
+    context: FreshContext<FoblogContext>,
     content: MdastNodeTy.Root | undefined,
   ): Promise<PreloadFulfilled[]> => {
     if (!content) return [];

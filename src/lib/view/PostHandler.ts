@@ -1,10 +1,14 @@
 import { FreshContext, Handler } from "$fresh/server.ts";
+import { FoblogContext } from "../../plugin/middleware.ts";
 import { preloadAssembler } from "../../preload/index.ts";
 import { PreloadFulfilled } from "../../preload/types.ts";
 import { getPost, PostTy } from "../index.ts";
 
 interface PostHandlerOptions {
-  decodeUrl: (url: string | URL, context: FreshContext) => string;
+  decodeUrl: (
+    url: string | URL,
+    context: FreshContext<FoblogContext>,
+  ) => string;
 }
 
 const defaultPostHandlerOptions: PostHandlerOptions = {
@@ -21,15 +25,13 @@ export interface PostHandlerProps {
 
 export const PostHandler = (
   options?: Partial<PostHandlerOptions>,
-): Handler<PostHandlerProps> => {
+): Handler<PostHandlerProps, FoblogContext> => {
   const { decodeUrl } = { ...defaultPostHandlerOptions, ...options };
 
   return async (request, context) => {
     const slug = decodeUrl(request.url, context);
 
-    const page = await context.get;
-
-    const post = await getPost(slug);
+    const post = await getPost(context.state)(slug);
     if (!post) {
       return context.renderNotFound();
     }

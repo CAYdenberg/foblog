@@ -8,12 +8,12 @@ import {
   openFile,
   Resource,
 } from "./disk.ts";
-import { Repository } from "./Repository.ts";
+import { AnyRepository, Repository } from "./Repository.ts";
 
 export class ContentBuilder {
   private ls: LsEntry[] | null;
   private prevLs: LsEntry[] | null;
-  private repositories: Repository<any>[];
+  private repositories: AnyRepository[];
 
   constructor(...models: AnyModel[]) {
     this.repositories = models.map((model) => new Repository(model));

@@ -1,4 +1,4 @@
-import { BaseSchema, FileHandle, Model } from "../lib/model/Model.ts";
+import { AnyModel, BaseSchema, FileHandle, Model } from "../lib/model/Model.ts";
 
 export class Repository<S extends BaseSchema> {
   public modelName: string;
@@ -41,3 +41,7 @@ export class Repository<S extends BaseSchema> {
 
   public async readFromDisk() {}
 }
+
+// need a way to specify a generic repositroy
+// deno-lint-ignore no-explicit-any
+export type AnyRepository = Repository<any>;

@@ -1,25 +1,34 @@
 import { ContentBuilder } from "../ContentBuilder.ts";
-import { setConfig } from "../../plugin/config.ts";
+import { setConfig, setFreshConfig } from "../../plugin/config.ts";
 import { assert, path } from "../../deps.ts";
 import { page } from "../../lib/index.ts";
 import { smooshResources } from "../disk.ts";
 
-setConfig((config) => {
-  if (!import.meta.dirname) {
-    throw new Error("TestNoLocalFs");
-  }
+if (!import.meta.dirname) {
+  throw new Error("TestNoLocalFs");
+}
+const dirname = import.meta.dirname;
 
+setConfig((config) => {
   return {
     ...config,
     log: false,
-    contentDir: path.join(import.meta.dirname, "../__content__"),
+    contentDir: "src/storage/__content__",
   };
 });
 
-Deno.test("ContentBuilder: init and analyze Ls", () => {
+setFreshConfig({
+  build: {
+    outDir: path.join(dirname, "../tmp"),
+  },
+});
+
+Deno.test("ContentBuilder: init and analyze Ls", async () => {
   const contentBuilder = new ContentBuilder(page);
-  return contentBuilder.init().then((ls) => {
-    const resources = smooshResources(ls).filter((res) => res.type === "page");
-    assert.assertEquals(resources.length, 2);
-  });
+
+  const ls = await contentBuilder.init();
+  const resources = smooshResources(ls).filter((res) => res.type === "page");
+  assert.assertEquals(resources.length, 2);
+
+  await Deno.remove(path.join(dirname, "../tmp"), { recursive: true });
 });

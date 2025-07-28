@@ -1,4 +1,5 @@
-import { AnyModel, BaseSchema, FileHandle, Model } from "../lib/model/Model.ts";
+import { BaseSchema, FileHandle, Model } from "../lib/model/Model.ts";
+import { getIndicesPath } from "./disk.ts";
 
 export class Repository<S extends BaseSchema> {
   public modelName: string;
@@ -11,12 +12,12 @@ export class Repository<S extends BaseSchema> {
     this.data = null;
   }
 
-  public async upsertDataFromFile(
+  public upsertDataFromFile(
     file: FileHandle,
   ) {
     const existingData = this.data || [];
 
-    const result = await this.model.resourcesFromFile(file);
+    const result = this.model.resourcesFromFile(file);
     if (!result) return [];
 
     const newData = Array.isArray(result) ? result : [result];
@@ -29,15 +30,20 @@ export class Repository<S extends BaseSchema> {
     });
   }
 
-  public async deleteItem(slug: string) {}
-
   public async getList() {}
+
+  public async deleteItem(slug: string) {}
 
   public async getItem(slug: string) {}
 
   public async getAttachment(slug: string, variant: string) {}
 
-  public async writeToDisk() {}
+  public writeToDisk() {
+    return Deno.writeTextFile(
+      getIndicesPath(`${this.modelName}.json`),
+      JSON.stringify(this.data),
+    );
+  }
 
   public async readFromDisk() {}
 }

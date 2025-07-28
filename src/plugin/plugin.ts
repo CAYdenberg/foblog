@@ -23,6 +23,7 @@ export default (config: ConfigSetter): Plugin => {
     buildStart: async (freshConfig) => {
       setFreshConfig(freshConfig);
       const ls = await contentBuilder.init();
+      await contentBuilder.buildAll();
       console.log(ls);
     },
 

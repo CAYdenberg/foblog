@@ -37,7 +37,9 @@ export class ContentBuilder {
 
   public watch() {}
 
-  public async buildAll() {}
+  public buildAll() {
+    return Promise.all(this.repositories.map((repo) => repo.writeToDisk()));
+  }
 
   private async buildLsEntryForFile(
     entry: Deno.DirEntry | string,
@@ -55,7 +57,7 @@ export class ContentBuilder {
     if (!prevEntry) {
       log(`Create: ${metadata.basename}`);
 
-      const resources = await this.runModels(file, false);
+      const resources = this.runModels(file, false);
       return {
         ...metadata,
         resources,
@@ -65,7 +67,7 @@ export class ContentBuilder {
     if (prevEntry.checksum !== file.checksum) {
       log(`Update: ${metadata.basename}`);
 
-      const resources = await this.runModels(file, true);
+      const resources = this.runModels(file, true);
       return {
         ...metadata,
         resources,
@@ -78,9 +80,11 @@ export class ContentBuilder {
   private runModels(
     file: FileHandle,
     isUpdate: boolean,
-  ): Promise<Resource[]> {
-    return Promise.all(this.repositories.map((repo) => {
+  ): Resource[] {
+    const results = this.repositories.map((repo) => {
       return repo.upsertDataFromFile(file);
-    })).then((results) => results.flat());
+    });
+
+    return results.flat();
   }
 }

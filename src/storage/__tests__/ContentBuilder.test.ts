@@ -1,25 +1,25 @@
 import { ContentBuilder } from "../ContentBuilder.ts";
 import { setConfig, setFreshConfig } from "../../plugin/config.ts";
 import { assert, path } from "../../deps.ts";
-import { page } from "../../lib/index.ts";
+import { page, PageTy } from "../../lib/index.ts";
 import { smooshResources } from "../disk.ts";
 
 if (!import.meta.dirname) {
   throw new Error("TestNoLocalFs");
 }
 const dirname = import.meta.dirname;
+const tmp = path.join(dirname, "../tmp");
 
 setConfig((config) => {
   return {
     ...config,
-    log: false,
+    logLevel: false,
     contentDir: "src/storage/__content__",
   };
 });
-
 setFreshConfig({
   build: {
-    outDir: path.join(dirname, "../tmp"),
+    outDir: tmp,
   },
 });
 
@@ -29,6 +29,21 @@ Deno.test("ContentBuilder: init and analyze Ls", async () => {
   const ls = await contentBuilder.init();
   const resources = smooshResources(ls).filter((res) => res.type === "page");
   assert.assertEquals(resources.length, 2);
+
+  await Deno.remove(tmp, { recursive: true });
+});
+
+Deno.test("ContentBuilder: repos are successfully built", async () => {
+  const contentBuilder = new ContentBuilder(page);
+
+  await contentBuilder.init();
+  await contentBuilder.buildAll();
+
+  const text = await Deno.readTextFile(path.join(tmp, "fob/repo/page.json"));
+  const pages: PageTy[] = JSON.parse(text);
+
+  assert.assertEquals(pages.length, 2);
+  assert.assertEquals(pages[0].extension, ".md");
 
   await Deno.remove(path.join(dirname, "../tmp"), { recursive: true });
 });

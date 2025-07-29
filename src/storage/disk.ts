@@ -60,7 +60,7 @@ export const openFile = async (
   context?: string,
 ) => {
   const fullPath = typeof entry === "string"
-    ? entry
+    ? getContentPath(entry)
     : getContentPath(entry.name, context);
 
   const extension = path.extname(fullPath);

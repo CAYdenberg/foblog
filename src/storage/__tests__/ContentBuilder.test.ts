@@ -1,8 +1,9 @@
 import { ContentBuilder } from "../ContentBuilder.ts";
 import { setConfig, setFreshConfig } from "../../plugin/config.ts";
 import { assert, path } from "../../deps.ts";
-import { page, PageTy } from "../../lib/index.ts";
+import { image, page, PageTy } from "../../lib/index.ts";
 import { smooshResources } from "../disk.ts";
+import { exists } from "$std/fs/exists.ts";
 
 if (!import.meta.dirname) {
   throw new Error("TestNoLocalFs");
@@ -44,6 +45,20 @@ Deno.test("ContentBuilder: repos are successfully built", async () => {
 
   assert.assertEquals(pages.length, 2);
   assert.assertEquals(pages[0].extension, ".md");
+
+  await Deno.remove(path.join(dirname, "../tmp"), { recursive: true });
+});
+
+Deno.test("ContentBuilder: build attachments", async () => {
+  const contentBuilder = new ContentBuilder(image);
+
+  await contentBuilder.init();
+  await contentBuilder.buildAll();
+
+  const attachmentExists = await exists(
+    path.join(tmp, "fob/attachments/scerevisiae_200.jpg"),
+  );
+  assert.assert(attachmentExists);
 
   await Deno.remove(path.join(dirname, "../tmp"), { recursive: true });
 });

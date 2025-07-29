@@ -1,5 +1,5 @@
 import { BaseSchema, FileHandle, Model } from "../lib/model/Model.ts";
-import { getIndicesPath } from "./disk.ts";
+import { getAttachmentPath, getIndicesPath, openFile } from "./disk.ts";
 
 export class Repository<S extends BaseSchema> {
   public modelName: string;
@@ -35,6 +35,25 @@ export class Repository<S extends BaseSchema> {
   public async deleteItem(slug: string) {}
 
   public async getItem(slug: string) {}
+
+  public async buildAttachments() {
+    if (!this.model.getAttachments) return;
+    if (!this.data) {
+      throw new Error("NoDataBeforeAttachmentBuild");
+    }
+
+    await Promise.all(this.data.map(async (resource) => {
+      const file = await openFile(`${resource.filename}${resource.extension}`);
+      const attachments = await this.model.getAttachments!(resource, file);
+      await Promise.all(attachments.map((attachment) => {
+        const path = getAttachmentPath(
+          `${resource.slug}_${attachment.variant}${resource.extension}`,
+        );
+        return Deno.writeFile(path, attachment.data);
+      }));
+    }));
+    return true;
+  }
 
   public async getAttachment(slug: string, variant: string) {}
 

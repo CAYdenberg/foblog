@@ -38,11 +38,14 @@ export class ContentBuilder {
   public watch() {}
 
   public buildAll() {
-    return Promise.all(this.repositories.map((repo) => repo.writeToDisk()));
+    return Promise.all(this.repositories.map(async (repo) => {
+      await repo.writeToDisk();
+      await repo.buildAttachments();
+    }));
   }
 
   private async buildLsEntryForFile(
-    entry: Deno.DirEntry | string,
+    entry: Deno.DirEntry,
     prefix?: string,
   ): Promise<LsEntry> {
     const file = await openFile(entry, prefix);

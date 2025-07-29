@@ -36,10 +36,10 @@ export const page: Model<PageTy> = {
     };
   },
 
-  contentFromResource: (_resource, file) => {
+  getContent: (_resource, file) => {
     const decoder = new TextDecoder("utf-8");
     const text = decoder.decode(file.data);
     const content = parseMd(text);
-    return Promise.resolve({ content });
+    return Promise.resolve(content);
   },
 };

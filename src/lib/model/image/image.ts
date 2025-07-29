@@ -75,7 +75,7 @@ export const image: Model<ImageTy> = {
     };
   },
 
-  contentFromResource: async (resource, file) => {
+  getAttachments: async (resource, file) => {
     let attachments: Attachment[] = [];
     await generateImageSizes(
       file.data,
@@ -85,6 +85,6 @@ export const image: Model<ImageTy> = {
         attachments = [...attachments, attachment];
       },
     );
-    return { attachments };
+    return attachments;
   },
 };

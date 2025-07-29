@@ -26,15 +26,12 @@ export interface Model<S extends BaseSchema> {
 
   resourcesFromFile: (file: FileHandle) => S | S[] | null;
 
-  contentFromResource?: (
+  getContent?: (
     resource: S,
     file: FileHandle,
-  ) => Promise<
-    {
-      content?: ContentRoot;
-      attachments?: Attachment[];
-    }
-  >;
+  ) => Promise<ContentRoot>;
+
+  getAttachments?: (resource: S, file: FileHandle) => Promise<Attachment[]>;
 }
 
 // deno-lint-ignore no-explicit-any

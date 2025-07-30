@@ -10,16 +10,16 @@ export const getImage =
     // than the reqeusted size.
 
     if (typeof width === "undefined") {
-      return fob.getAttachment("image", slug, null);
+      return fob.getAttachment("image", data, null);
     }
 
     const neededSize = data.sizes.slice().sort((a, b) => a.size - b.size).find((
       size,
-    ) => size.size > width);
+    ) => size.size >= width);
 
     return fob.getAttachment(
       "image",
-      slug,
+      data,
       neededSize?.variant || null,
     );
   };

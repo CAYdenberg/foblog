@@ -30,6 +30,6 @@ export const getPost = (data: FoblogContext) => (slug: string) => {
     data.getContent("post", slug),
   ]).then(([model, content]) => {
     if (!model || !content) return null;
-    return { ...model, ...content };
+    return { ...model, content };
   }).catch(() => null);
 };

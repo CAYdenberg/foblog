@@ -3,7 +3,6 @@ import { log } from "../log.ts";
 import {
   buildLs,
   createOutDirIfNotExists,
-  findPrevEntry,
   LsEntry,
   openFile,
   Resource,
@@ -12,13 +11,11 @@ import { AnyRepository, Repository } from "./Repository.ts";
 
 export class ContentBuilder {
   private ls: LsEntry[] | null;
-  private prevLs: LsEntry[] | null;
   private repositories: AnyRepository[];
 
   constructor(...models: AnyModel[]) {
     this.repositories = models.map((model) => new Repository(model));
     this.ls = null;
-    this.prevLs = null;
   }
 
   public getRepository<S extends BaseSchema>(modelName: string) {
@@ -27,7 +24,7 @@ export class ContentBuilder {
   }
 
   public async init() {
-    log("Building...");
+    log("Building file list");
     await createOutDirIfNotExists();
     this.ls = await buildLs((entry, context) =>
       this.buildLsEntryForFile(entry, context)
@@ -40,7 +37,7 @@ export class ContentBuilder {
   public buildAll() {
     return Promise.all(this.repositories.map(async (repo) => {
       await repo.writeToDisk();
-      await repo.buildAttachments();
+      await repo.buildAllAttachments();
     }));
   }
 
@@ -49,7 +46,6 @@ export class ContentBuilder {
     prefix?: string,
   ): Promise<LsEntry> {
     const file = await openFile(entry, prefix);
-    const prevEntry = findPrevEntry(this.prevLs)(file.filename, file.extension);
 
     const metadata = {
       basename: file.filename,
@@ -57,32 +53,15 @@ export class ContentBuilder {
       checksum: file.checksum,
     };
 
-    if (!prevEntry) {
-      log(`Create: ${metadata.basename}`);
-
-      const resources = this.runModels(file, false);
-      return {
-        ...metadata,
-        resources,
-      };
-    }
-
-    if (prevEntry.checksum !== file.checksum) {
-      log(`Update: ${metadata.basename}`);
-
-      const resources = this.runModels(file, true);
-      return {
-        ...metadata,
-        resources,
-      };
-    }
-
-    return prevEntry;
+    const resources = this.runModels(file);
+    return {
+      ...metadata,
+      resources,
+    };
   }
 
   private runModels(
     file: FileHandle,
-    isUpdate: boolean,
   ): Resource[] {
     const results = this.repositories.map((repo) => {
       return repo.upsertDataFromFile(file);

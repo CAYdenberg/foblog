@@ -1,18 +1,21 @@
-import { Repository } from "../../../storage/db.ts";
+import { FoblogContext } from "../../../plugin/index.ts";
 import { Paginate } from "./index.ts";
 import { Pagination, PaginationOptions } from "./pagination.ts";
-import { post, PostTy } from "./post.ts";
+import { PostTy } from "./post.ts";
 
 export interface BlogList {
   posts: PostTy[];
   pagination: Pagination;
 }
 
-export const BlogList = (options: Partial<PaginationOptions> = {}) => {
+export const getBlogList = (options: Partial<PaginationOptions> = {}) => {
   const paginate = Paginate(options);
 
-  return async (url?: string | URL | null): Promise<BlogList> => {
-    const all = await Repository(post).getAll();
+  return (data: FoblogContext) =>
+  async (
+    url?: string | URL | null,
+  ): Promise<BlogList> => {
+    const all = await data.getAll<PostTy>("post");
     const pagination = paginate(all, url);
     return {
       posts: all.slice(pagination.params.skip, pagination.params.limit + 1),
@@ -21,4 +24,12 @@ export const BlogList = (options: Partial<PaginationOptions> = {}) => {
   };
 };
 
-export const getPost = Repository(post).get;
+export const getPost = (data: FoblogContext) => (slug: string) => {
+  return Promise.all([
+    data.getItem<PostTy>("post", slug),
+    data.getContent("post", slug),
+  ]).then(([model, content]) => {
+    if (!model || !content) return null;
+    return { ...model, content };
+  }).catch(() => null);
+};

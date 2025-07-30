@@ -1,65 +1,43 @@
-import { IM, slugify, z } from "../../../deps.ts";
+import { IM, z } from "../../../deps.ts";
 import { config } from "../../../plugin/config.ts";
-import { getAttachmentPath } from "../../../storage/disk.ts";
 import { Model } from "../Model.ts";
+import type { Attachment } from "../Model.ts";
 
 type IMagickImage = IM.IMagickImage;
 const ImageMagick = IM.ImageMagick;
 
 await IM.initialize();
 
+const extensions = [".png", ".jpg", ".jpeg", ".bmp", ".webp"] as const;
+
+const isAllowedFormat = (
+  extension: string,
+): extension is typeof extensions[number] => {
+  // here we are confirming that the input fits within the enum
+  // deno-lint-ignore no-explicit-any
+  return extensions.includes(extension as any);
+};
+
 export const ImageSchema = z.object({
   slug: z.string(),
-  originalFilename: z.string(),
-  width: z.number(),
-  height: z.number(),
-  aspectRatio: z.number(),
-  format: z.enum(["jpg", "png", "bmp", "webp", "unknown"]),
+  filename: z.string(),
   sizes: z.array(z.object({
+    variant: z.string(),
     size: z.number(),
-    filename: z.string(),
   })),
+  extension: z.enum(extensions),
 });
 
 export type ImageTy = z.infer<typeof ImageSchema>;
-
-export type ImageMetadataTy = Omit<
-  z.infer<typeof ImageSchema>,
-  "originalFilename" | "sizes" | "slug"
->;
-
-const getFormat = (magicFormat: IM.MagickFormat) => {
-  switch (magicFormat) {
-    case "PNG":
-      return "png";
-    case "JPG":
-    case "JPEG":
-      return "jpg";
-    case "BMP":
-      return "bmp";
-    case "WEBP":
-      return "webp";
-  }
-  return "unknown";
-};
-
-const extensions = [".png", ".jpg", ".jpeg", ".bmp", ".webp"];
 
 const generateImageSizes = (
   data: Uint8Array,
   sizes: number[],
   emitSize?: (size: number, data: Uint8Array) => void,
-): Promise<{ metadata: ImageMetadataTy; sizes: number[] }> => {
+): Promise<number[]> => {
   return new Promise((resolve) => {
     ImageMagick.read(data, (img: IMagickImage) => {
-      const format = getFormat(img.format);
       const aspectRatio = img.width / img.height;
-      const metadata: ImageMetadataTy = {
-        width: img.width,
-        height: img.height,
-        format,
-        aspectRatio,
-      };
 
       let outsizes: number[] = [];
 
@@ -74,7 +52,7 @@ const generateImageSizes = (
         });
       }
 
-      resolve({ metadata, sizes: outsizes });
+      resolve(outsizes);
     });
   });
 };
@@ -83,31 +61,30 @@ export const image: Model<ImageTy> = {
   name: "image",
   schema: ImageSchema,
 
-  onRead: async (file) => {
-    if (!extensions.includes(file.extension.toLowerCase())) return null;
-    const slug = slugify(file.filename);
-
-    const getFilename = (size: number) => `${slug}_${size}${file.extension}`;
-    const emitSize = (size: number, data: Uint8Array) => {
-      const path = getAttachmentPath(getFilename(size));
-      if (!path) return;
-      Deno.writeFile(path, data);
-    };
-
-    const data = await generateImageSizes(
-      file.data,
-      config.images.sizes,
-      emitSize,
-    );
-
+  resourcesFromFile: (file) => {
+    if (!isAllowedFormat(file.extension)) return null;
+    const slug = file.defaultSlug;
     return {
-      ...data.metadata,
-      sizes: data.sizes.map((size) => ({
-        size,
-        filename: getFilename(size),
-      })),
+      filename: file.filename,
+      extension: file.extension,
       slug,
-      originalFilename: `${file.filename}${file.extension}`,
+      sizes: config.images.sizes.map((size) => ({
+        variant: `${size}`,
+        size,
+      })),
     };
+  },
+
+  getAttachments: async (resource, file) => {
+    let attachments: Attachment[] = [];
+    await generateImageSizes(
+      file.data,
+      resource.sizes.map((size) => size.size),
+      (size: number, data: Uint8Array) => {
+        const attachment: Attachment = { variant: `${size}`, data };
+        attachments = [...attachments, attachment];
+      },
+    );
+    return attachments;
   },
 };

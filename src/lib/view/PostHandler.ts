@@ -1,4 +1,5 @@
 import { FreshContext, Handler } from "$fresh/server.ts";
+import { MdastNodeTy } from "../../parsers/index.ts";
 import { FoblogContext } from "../../plugin/middleware.ts";
 import { preloadAssembler } from "../../preload/index.ts";
 import { PreloadFulfilled } from "../../preload/types.ts";
@@ -19,7 +20,7 @@ const defaultPostHandlerOptions: PostHandlerOptions = {
 };
 
 export interface PostHandlerProps {
-  post: PostTy;
+  post: PostTy & { content: MdastNodeTy.Root };
   preloads: PreloadFulfilled[];
 }
 

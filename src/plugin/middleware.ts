@@ -1,6 +1,7 @@
 import { FreshContext } from "$fresh/server.ts";
 import { BaseSchema } from "../lib/model/Model.ts";
 import { Root as MdastContent } from "../parsers/markdown/MdastNode.ts";
+import { AnyRepository } from "../storage/Repository.ts";
 import { setFreshConfig } from "./config.ts";
 
 export interface FoblogContext {
@@ -27,11 +28,9 @@ export interface FoblogContext {
   ) => Promise<{ content: MdastContent }>;
 }
 
-export const foblogMiddleware = async (
-  _req: Request,
-  ctx: FreshContext<FoblogContext>,
-) => {
-  setFreshConfig(ctx.config);
-
-  return await ctx.next();
+export const createFoblogContext = (
+  repositories: AnyRepository[],
+  writeCache?: boolean,
+): FoblogContext => {
+  return;
 };

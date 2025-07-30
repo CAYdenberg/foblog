@@ -3,29 +3,38 @@
 import { FreshContext, Plugin } from "$fresh/server.ts";
 import { image, page, post } from "../lib/index.ts";
 import { ContentBuilder } from "../storage/ContentBuilder.ts";
+import { Repository } from "../storage/Repository.ts";
 import { ConfigSetter, setConfig, setFreshConfig } from "./config.ts";
 import { createFoblogContext } from "./middleware.ts";
-
-const MODELS = [post, page, image];
 
 let contentBuilder: ContentBuilder;
 
 const foblogMiddleware = async (_req: Request, ctx: FreshContext) => {
   setFreshConfig(ctx.config);
 
-  const context = createFoblogContext(MODELS, ctx.config.dev);
+  const context = createFoblogContext(
+    {
+      post: new Repository(post),
+      page: new Repository(page),
+      image: new Repository(image),
+    },
+    ctx.config.dev,
+  );
+
+  ctx.state = { ...ctx.state, ...context };
 
   return await ctx.next();
 };
 
 export default (config: ConfigSetter): Plugin => {
   setConfig(config);
-  contentBuilder = new ContentBuilder(...MODELS);
+  contentBuilder = new ContentBuilder(post, page, image);
 
   return {
     name: "foblog",
 
     buildStart: async (freshConfig) => {
+      console.log(freshConfig);
       setFreshConfig(freshConfig);
       await contentBuilder.init();
       await contentBuilder.buildAll();

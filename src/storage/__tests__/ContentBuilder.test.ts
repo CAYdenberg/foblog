@@ -1,6 +1,6 @@
 import { ContentBuilder } from "../ContentBuilder.ts";
 import { setConfig, setFreshConfig } from "../../plugin/config.ts";
-import { assert, path } from "../../deps.ts";
+import { assert, path, z } from "../../deps.ts";
 import { image, page, PageTy } from "../../lib/index.ts";
 import { smooshResources } from "../disk.ts";
 import { exists } from "$std/fs/exists.ts";
@@ -19,10 +19,13 @@ setConfig((config) => {
   };
 });
 setFreshConfig({
+  dev: false,
   build: {
     outDir: tmp,
   },
-});
+  // do not want to mock the entire Fresh config
+  // deno-lint-ignore no-explicit-any
+} as any);
 
 Deno.test("ContentBuilder: init and analyze Ls", async () => {
   const contentBuilder = new ContentBuilder(page);
@@ -61,4 +64,29 @@ Deno.test("ContentBuilder: build attachments", async () => {
   assert.assert(attachmentExists);
 
   await Deno.remove(path.join(dirname, "../tmp"), { recursive: true });
+});
+
+const failingPage = {
+  ...page,
+  schema: z.object({
+    slug: z.string(),
+    title: z.string(),
+    filename: z.string(),
+    extension: z.literal(".md"),
+    propThatNeverExists: z.string(),
+  }),
+};
+
+Deno.test("ContentBuilder: check resources", async () => {
+  const contentBuilder = new ContentBuilder(failingPage);
+
+  let didThrow = false;
+  try {
+    await contentBuilder.init();
+  } catch (_) {
+    didThrow = true;
+  }
+  assert.assert(didThrow);
+
+  await Deno.remove(tmp, { recursive: true });
 });

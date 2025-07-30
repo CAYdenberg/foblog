@@ -1,5 +1,6 @@
 import { FreshContext } from "$fresh/server.ts";
 import { BaseSchema } from "../lib/model/Model.ts";
+import { warn } from "../log.ts";
 import { Root as MdastContent } from "../parsers/markdown/MdastNode.ts";
 import { AnyRepository } from "../storage/Repository.ts";
 import { setFreshConfig } from "./config.ts";
@@ -29,8 +30,18 @@ export interface FoblogContext {
 }
 
 export const createFoblogContext = (
-  repositories: AnyRepository[],
+  repositories: Record<string, AnyRepository>,
   writeCache?: boolean,
 ): FoblogContext => {
-  return;
+  const getAll = (type: string) => {
+    const repo = repositories[type];
+    if (!repo) {
+      warn(`Repository ${type} not configured`);
+    }
+    return repo.getAll();
+  };
+
+  return {
+    getAll,
+  };
 };

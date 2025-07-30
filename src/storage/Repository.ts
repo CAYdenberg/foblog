@@ -1,4 +1,6 @@
 import { BaseSchema, FileHandle, Model } from "../lib/model/Model.ts";
+import { warn } from "../log.ts";
+import { config } from "../plugin/config.ts";
 import { getAttachmentPath, getIndicesPath, openFile } from "./disk.ts";
 
 export class Repository<S extends BaseSchema> {
@@ -22,6 +24,7 @@ export class Repository<S extends BaseSchema> {
 
     const newData = Array.isArray(result) ? result : [result];
     return newData.map((item) => {
+      this.checkItem(item);
       this.data = [...existingData, item];
       return {
         type: this.model.name,
@@ -30,7 +33,13 @@ export class Repository<S extends BaseSchema> {
     });
   }
 
-  public async getList() {}
+  public async getAll(): Promise<S[]> {
+    if (!this.data) {
+      const data = await this.readFromDisk();
+      return data;
+    }
+    return this.data;
+  }
 
   public async deleteItem(slug: string) {}
 
@@ -64,7 +73,24 @@ export class Repository<S extends BaseSchema> {
     );
   }
 
-  public async readFromDisk() {}
+  public async readFromDisk(): Promise<S[]> {
+    const text = await Deno.readTextFile(
+      getIndicesPath(`${this.modelName}.json`),
+    );
+    return JSON.parse(text);
+  }
+
+  private checkItem(item: S) {
+    const { success, error } = this.model.schema.safeParse(item);
+    if (success) return;
+    if (config.freshConfig?.dev) {
+      warn(
+        `Model ${this.modelName} Resource ${item.slug} did not match schema`,
+      );
+      return;
+    }
+    throw error;
+  }
 }
 
 // need a way to specify a generic repositroy

@@ -64,7 +64,7 @@ export class ContentBuilder {
     file: FileHandle,
   ): Resource[] {
     const results = this.repositories.map((repo) => {
-      return repo.upsertDataFromFile(file);
+      return repo.insertDataFromFile(file);
     });
 
     return results.flat();

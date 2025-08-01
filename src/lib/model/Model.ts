@@ -12,6 +12,7 @@ export interface BaseSchema {
   slug: string;
   filename: string;
   extension: string;
+  variants?: string[];
 }
 
 export interface Attachment {

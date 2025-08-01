@@ -21,11 +21,8 @@ const isAllowedFormat = (
 export const ImageSchema = z.object({
   slug: z.string(),
   filename: z.string(),
-  sizes: z.array(z.object({
-    variant: z.string(),
-    size: z.number(),
-  })),
   extension: z.enum(extensions),
+  variants: z.array(z.string()).optional(),
 });
 
 export type ImageTy = z.infer<typeof ImageSchema>;
@@ -68,18 +65,14 @@ export const image: Model<ImageTy> = {
       filename: file.filename,
       extension: file.extension,
       slug,
-      sizes: config.images.sizes.map((size) => ({
-        variant: `${size}`,
-        size,
-      })),
     };
   },
 
-  getAttachments: async (resource, file) => {
+  getAttachments: async (_resource, file) => {
     let attachments: Attachment[] = [];
     await generateImageSizes(
       file.data,
-      resource.sizes.map((size) => size.size),
+      config.images.sizes,
       (size: number, data: Uint8Array) => {
         const attachment: Attachment = { variant: `${size}`, data };
         attachments = [...attachments, attachment];

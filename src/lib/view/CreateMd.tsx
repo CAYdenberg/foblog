@@ -16,7 +16,7 @@ import {
   PreloadAssemblerTy,
 } from "../../preload/index.ts";
 import { PreloadFulfilled } from "../../preload/types.ts";
-import { ImgLazyResponsive } from "./ImgLazyResponsive.tsx";
+import { ImgLazyResponsive } from "./ImgLazy.tsx";
 
 // We use "any" here for props, because we do not know the type of the
 // components which are added by the user

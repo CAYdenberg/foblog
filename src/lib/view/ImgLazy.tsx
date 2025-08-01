@@ -2,21 +2,19 @@ import { FunctionComponent } from "preact";
 import { ImageTy } from "../model/index.ts";
 import { config } from "../../plugin/config.ts";
 
-export interface ImgLazyResponsiveProps {
+export interface ImgLazyProps {
   image: ImageTy | null;
   alt: string;
-  sizes?: string;
   className?: string;
 }
 
-export const ImgLazyResponsive: FunctionComponent<ImgLazyResponsiveProps> = (
+export const ImgLazy: FunctionComponent<ImgLazyResponsiveProps> = (
   { image, alt, sizes, className },
 ) => {
   if (!image) return null;
 
   const sizesAsc = image.sizes.slice().sort((a, b) => a.size - b.size);
-  const smallest = sizesAsc[0];
-  const src = config.images.permalink(image.slug, smallest?.size);
+  const src = config.images.permalink(image.slug);
   const srcset = sizesAsc.length
     ? sizesAsc.map((size) =>
       `${config.images.permalink(image.slug, size.size)} ${size.size}w`

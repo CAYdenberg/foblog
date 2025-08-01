@@ -6,20 +6,16 @@ export const getImage =
     const data = await fob.getItem<ImageTy>("image", slug);
     if (!data) return null;
 
-    // sort the sizes in ASC order, then find the first one that is larger
-    // than the reqeusted size.
-
-    if (typeof width === "undefined") {
+    if (typeof width === "undefined" || !data.variants) {
       return fob.getAttachment("image", data, null);
     }
 
-    const neededSize = data.sizes.slice().sort((a, b) => a.size - b.size).find((
-      size,
-    ) => size.size >= width);
+    // sort the sizes in ASC order, then find the first one that is larger
+    // than the reqeusted size.
+    const neededSize = data.variants?.map((variant) => parseInt(variant))
+      .filter((size) => !isNaN(size)).sort((a, b) => a - b).find((size) =>
+        size >= width
+      );
 
-    return fob.getAttachment(
-      "image",
-      data,
-      neededSize?.variant || null,
-    );
+    return fob.getAttachment("image", data, neededSize?.toString() || null);
   };

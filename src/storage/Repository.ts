@@ -16,14 +16,16 @@ export class Repository<S extends BaseSchema> {
   public modelName: string;
   private model: Model<S>;
   private data: S[] | null;
+  private variants: Record<string, string[]>;
 
   constructor(model: Model<S>) {
     this.modelName = model.name;
     this.model = model;
     this.data = null;
+    this.variants = {};
   }
 
-  public upsertDataFromFile(
+  public insertDataFromFile(
     file: FileHandle,
   ) {
     const existingData = this.data || [];
@@ -54,7 +56,14 @@ export class Repository<S extends BaseSchema> {
   public async getItem(slug: string): Promise<S | null> {
     const data = await this.getAll();
     const item = data.find((item) => item.slug === slug);
-    return item || null;
+    if (!item) return null;
+
+    let variants = this.variants[item.slug];
+    if (!variants && this.model.getAttachments) {
+      variants = await this.buildAttachments(item);
+    }
+
+    return { ...item, variants };
   }
 
   public async getContent(slug: string): Promise<MdastContent | null> {
@@ -148,13 +157,15 @@ export class Repository<S extends BaseSchema> {
 
     const file = await openFile(`${resource.filename}${resource.extension}`);
     const attachments = await this.model.getAttachments!(resource, file);
-    await Promise.all(attachments.map((attachment) => {
+    const variants = await Promise.all(attachments.map(async (attachment) => {
       const path = getAttachmentPath(
         `${resource.slug}_${attachment.variant}${resource.extension}`,
       );
-      return Deno.writeFile(path, attachment.data);
+      await Deno.writeFile(path, attachment.data);
+      return attachment.variant;
     }));
-    return true;
+    this.variants[resource.slug] = variants;
+    return variants;
   }
 
   private checkItem(item: S) {

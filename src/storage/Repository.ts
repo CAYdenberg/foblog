@@ -70,7 +70,7 @@ export class Repository<S extends BaseSchema> {
     const item = data.find((item) => item.slug === slug);
     if (!item) return null;
 
-    let variants = this.variants[item.slug];
+    let variants = item.variants || this.variants[item.slug];
     if (!variants && this.model.getAttachments) {
       variants = await this.buildAttachments(item);
     }

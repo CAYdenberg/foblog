@@ -12,7 +12,7 @@ import { AnyRepository, Repository } from "./Repository.ts";
 export class ContentBuilder {
   private ls: LsEntry[] | null;
   private repositories: AnyRepository[];
-  private initPromise?: Promise<LsEntry[] | null>;
+  private initPromise?: Promise<LsEntry[]>;
 
   constructor(...models: AnyModel[]) {
     this.repositories = models.map((model) => new Repository(model));
@@ -28,7 +28,7 @@ export class ContentBuilder {
     return this.repositories;
   }
 
-  public init() {
+  public init(): Promise<LsEntry[]> {
     if (this.initPromise) return this.initPromise;
 
     const start = Date.now();

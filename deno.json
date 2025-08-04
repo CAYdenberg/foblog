@@ -1,4 +1,6 @@
 {
+  "license": "MIT NON-AI",
+  "exports": "./mod.ts",
   "lock": false,
   "tasks": {
     "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",

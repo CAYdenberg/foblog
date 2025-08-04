@@ -1,9 +1,11 @@
+import { exists } from "$std/fs/exists.ts";
 import { ContentBuilder } from "../ContentBuilder.ts";
+
 import { setConfig, setFreshConfig } from "../../plugin/config.ts";
 import { assert, path, z } from "../../deps.ts";
-import { image, page, PageTy } from "../../lib/index.ts";
 import { smooshResources } from "../disk.ts";
-import { exists } from "$std/fs/exists.ts";
+
+import { image, page, type PageTy } from "../../lib/model/index.ts";
 
 if (!import.meta.dirname) {
   throw new Error("TestNoLocalFs");

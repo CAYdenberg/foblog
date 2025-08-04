@@ -102,9 +102,10 @@ export class Repository<S extends BaseSchema> {
       throw new Error("NoDataBeforeAttachmentBuild");
     }
 
-    await Promise.all(this.data.map((resource) => {
-      return this.buildAttachments(resource);
-    }));
+    for (const resource of this.data) {
+      await this.buildAttachments(resource);
+    }
+
     return true;
   }
 
@@ -165,14 +166,18 @@ export class Repository<S extends BaseSchema> {
     );
 
     const file = await openFile(`${resource.filename}${resource.extension}`);
-    const attachments = await this.model.getAttachments!(resource, file);
-    const variants = await Promise.all(attachments.map(async (attachment) => {
-      const path = getAttachmentPath(
-        `${resource.slug}_${attachment.variant}${resource.extension}`,
+
+    const getDestPath = (variant: string) =>
+      getAttachmentPath(
+        `${resource.slug}_${variant}${resource.extension}`,
       );
-      await Deno.writeFile(path, attachment.data);
-      return attachment.variant;
-    }));
+
+    const variants = await this.model.getAttachments!(
+      resource,
+      file,
+      getDestPath,
+    );
+
     this.variants[resource.slug] = variants;
     return variants;
   }

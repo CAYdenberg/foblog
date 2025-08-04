@@ -47,11 +47,11 @@ export class ContentBuilder {
 
   public watch() {}
 
-  public buildAll() {
-    return Promise.all(this.repositories.map(async (repo) => {
+  public async buildAll() {
+    for (const repo of this.repositories) {
       await repo.buildAllAttachments();
       await repo.writeToDisk();
-    }));
+    }
   }
 
   private async buildLsEntryForFile(

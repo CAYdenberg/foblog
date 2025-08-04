@@ -15,11 +15,6 @@ export interface BaseSchema {
   variants?: string[];
 }
 
-export interface Attachment {
-  variant: string;
-  data: Uint8Array;
-}
-
 export interface Model<S extends BaseSchema> {
   name: string;
 
@@ -32,7 +27,11 @@ export interface Model<S extends BaseSchema> {
     file: FileHandle,
   ) => Promise<ContentRoot>;
 
-  getAttachments?: (resource: S, file: FileHandle) => Promise<Attachment[]>;
+  getAttachments?: (
+    resource: S,
+    file: FileHandle,
+    getDestPath: (variant: string) => string,
+  ) => Promise<string[]>;
 }
 
 // deno-lint-ignore no-explicit-any

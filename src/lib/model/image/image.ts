@@ -1,14 +1,13 @@
 import { IM, z } from "../../../deps.ts";
 import { config } from "../../../plugin/config.ts";
 import { Model } from "../Model.ts";
-import type { Attachment } from "../Model.ts";
 
 type IMagickImage = IM.IMagickImage;
 const ImageMagick = IM.ImageMagick;
 
-await IM.initialize();
-
 const extensions = [".png", ".jpg", ".jpeg", ".bmp", ".webp"] as const;
+
+await IM.initialize();
 
 const isAllowedFormat = (
   extension: string,
@@ -30,26 +29,32 @@ export type ImageTy = z.infer<typeof ImageSchema>;
 const generateImageSizes = (
   data: Uint8Array,
   sizes: number[],
-  emitSize?: (size: number, data: Uint8Array) => void,
-): Promise<number[]> => {
+  getDestPath: (variant: string) => string,
+): Promise<string[]> => {
   return new Promise((resolve) => {
     ImageMagick.read(data, (img: IMagickImage) => {
       const aspectRatio = img.width / img.height;
 
-      let outsizes: number[] = [];
+      let outsizes: string[] = [];
 
-      if (emitSize) {
-        [img.width, ...sizes].sort((a, b) => b - a).forEach((size) => {
-          if (size > img.width) return;
-          img.resize(size, size / aspectRatio);
-          outsizes = [...outsizes, size];
-          img.write(img.format, (data) => {
-            emitSize(size, data);
-          });
+      const recur = (sizes: number[]) => {
+        if (!sizes.length) {
+          return resolve(outsizes);
+        }
+        const [head, ...tail] = sizes;
+        if (head > img.width) {
+          return recur(tail);
+        }
+        outsizes = [...outsizes, head.toString()];
+        img.resize(head, head / aspectRatio);
+        img.write(img.format, (data) => {
+          Deno.writeFileSync(getDestPath(head.toString()), data);
+          recur(tail);
         });
-      }
+      };
 
-      resolve(outsizes);
+      const sizesDesc: number[] = [img.width, ...sizes].sort((a, b) => b - a);
+      recur(sizesDesc);
     });
   });
 };
@@ -68,16 +73,12 @@ export const image: Model<ImageTy> = {
     };
   },
 
-  getAttachments: async (_resource, file) => {
-    let attachments: Attachment[] = [];
-    await generateImageSizes(
+  getAttachments: async (_resource, file, getDestPath) => {
+    const sizes = await generateImageSizes(
       file.data,
       config.images.sizes,
-      (size: number, data: Uint8Array) => {
-        const attachment: Attachment = { variant: `${size}`, data };
-        attachments = [...attachments, attachment];
-      },
+      getDestPath,
     );
-    return attachments;
+    return sizes;
   },
 };

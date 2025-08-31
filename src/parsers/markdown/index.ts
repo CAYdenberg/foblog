@@ -1,5 +1,10 @@
 export { parseMd } from "./parseMd.ts";
-export { flattenTree, getPostMetadata, selectNodes } from "./metadata.ts";
+export {
+  flattenTree,
+  getPostMetadata,
+  processMetadataXRef,
+  selectNodes,
+} from "./metadata.ts";
 
 export { isLeaf } from "./MdastNode.ts";
 

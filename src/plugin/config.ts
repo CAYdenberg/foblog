@@ -58,6 +58,7 @@ const DEFAULT_CONFIG: PluginConfig = {
     ) => `${slug}_${size}${extension}`,
     permalink: (slug, width) => {
       const qs = stringifyQuery({ width });
+      if (qs === "") return `/image/${slug}`;
       return `/image/${slug}?${qs}`;
     },
   },

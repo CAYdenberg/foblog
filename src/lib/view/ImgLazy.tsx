@@ -14,7 +14,7 @@ export const ImgLazy: FunctionComponent<ImgLazyProps> = (
 ) => {
   const [requestedSize, setRequestedSize] = useState(1);
 
-  const srcWithQuery = `${src}width=${requestedSize}`;
+  const srcWithQuery = `${src}?width=${requestedSize}`;
 
   const imgRef = useRef<HTMLImageElement>(null);
   useLayoutEffect(() => {

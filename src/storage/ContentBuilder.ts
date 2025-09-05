@@ -1,22 +1,26 @@
 import { AnyModel, BaseSchema, FileHandle } from "../lib/model/Model.ts";
 import { log } from "../log.ts";
+import { config } from "../plugin/config.ts";
 import {
   buildLs,
   createOutDirIfNotExists,
+  getContentDir,
   LsEntry,
   openFile,
   Resource,
 } from "./disk.ts";
+import { warnIfNoKv, wrapWithCache } from "./ModelCache.ts";
 import { AnyRepository, Repository } from "./Repository.ts";
 
 export class ContentBuilder {
-  private ls: LsEntry[] | null;
   private repositories: AnyRepository[];
   private initPromise?: Promise<LsEntry[]>;
+  private watcher?: Deno.FsWatcher;
 
   constructor(...models: AnyModel[]) {
-    this.repositories = models.map((model) => new Repository(model));
-    this.ls = null;
+    this.repositories = models.map((model) =>
+      new Repository(wrapWithCache(model))
+    );
   }
 
   public getRepository<S extends BaseSchema>(modelName: string) {
@@ -31,12 +35,15 @@ export class ContentBuilder {
   public init(): Promise<LsEntry[]> {
     if (this.initPromise) return this.initPromise;
 
+    if (config.freshConfig?.dev) {
+      warnIfNoKv();
+    }
+
     const start = Date.now();
 
     const promise = createOutDirIfNotExists().then(() =>
       buildLs((entry, context) => this.buildLsEntryForFile(entry, context))
     ).then((ls) => {
-      this.ls = ls;
       log(`Built file list in ${Date.now() - start}ms`);
       return ls;
     });
@@ -45,7 +52,26 @@ export class ContentBuilder {
     return promise;
   }
 
-  public watch() {}
+  public async watch() {
+    if (this.watcher) return;
+
+    const queue = new Set<string>();
+
+    setInterval(() => {
+      Array.from(queue).forEach((path) => {
+        log(`Rebuilding resources for file "${path}"`);
+        this.buildLsEntryForFile(path);
+        queue.delete(path);
+      });
+    }, config.contentWatchDebounceInterval);
+
+    this.watcher = Deno.watchFs(getContentDir());
+    for await (const event of this.watcher) {
+      event.paths.forEach((path) => {
+        queue.add(path.replace(`${getContentDir()}/`, ""));
+      });
+    }
+  }
 
   public async buildAll() {
     for (const repo of this.repositories) {
@@ -55,7 +81,7 @@ export class ContentBuilder {
   }
 
   private async buildLsEntryForFile(
-    entry: Deno.DirEntry,
+    entry: Deno.DirEntry | string,
     prefix?: string,
   ): Promise<LsEntry> {
     const file = await openFile(entry, prefix);
@@ -66,19 +92,19 @@ export class ContentBuilder {
       checksum: file.checksum,
     };
 
-    const resources = this.runModels(file);
+    const resources = await this.runModels(file);
     return {
       ...metadata,
       resources,
     };
   }
 
-  private runModels(
+  private async runModels(
     file: FileHandle,
-  ): Resource[] {
-    const results = this.repositories.map((repo) => {
-      return repo.insertDataFromFile(file);
-    });
+  ): Promise<Resource[]> {
+    const results = await Promise.all(
+      this.repositories.map((repo) => repo.insertDataFromFile(file)),
+    );
 
     return results.flat();
   }

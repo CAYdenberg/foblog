@@ -6,6 +6,7 @@ export interface FileHandle {
   extension: string;
   defaultSlug: string;
   data: Uint8Array;
+  checksum: string;
 }
 
 export interface BaseSchema {
@@ -20,7 +21,9 @@ export interface Model<S extends BaseSchema> {
 
   schema: z.Schema<S>;
 
-  resourcesFromFile: (file: FileHandle) => S | S[] | null;
+  resourcesFromFile: (
+    file: FileHandle,
+  ) => Promise<S | S[] | null> | S | S[] | null;
 
   getContent?: (
     resource: S,

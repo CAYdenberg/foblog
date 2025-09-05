@@ -7,7 +7,7 @@ _slugify.extend({
 export const slugify = (input: string) =>
   _slugify(input, {
     replacement: "-",
-    remove: /[:\,\/\\\'\"\(\)]/,
+    remove: /[:\,\/\\\'\"\(\)\?]/,
     lower: true,
   });
 

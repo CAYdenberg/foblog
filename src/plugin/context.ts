@@ -100,6 +100,8 @@ export const createFoblogContextPrebuilt = (
 export const createFoblogContextDev = (
   contentBuilder: ContentBuilder,
 ): FoblogContext => {
+  contentBuilder.watch();
+
   const getAll = async <S extends BaseSchema>(type: string) => {
     await contentBuilder.init();
     return contentBuilder.getRepository<S>(type).getAll();

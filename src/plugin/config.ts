@@ -5,6 +5,7 @@ import { stringifyQuery } from "../parsers/index.ts";
 export interface PluginConfig {
   logLevel: "warn" | "verbose" | false;
   contentDir: string;
+  contentWatchDebounceInterval: number;
   outDir: string;
 
   siteUrl?: string;
@@ -38,6 +39,7 @@ export interface PluginConfig {
 const DEFAULT_CONFIG: PluginConfig = {
   logLevel: "verbose",
   contentDir: "content",
+  contentWatchDebounceInterval: 1000,
   outDir: "fob",
 
   posts: {

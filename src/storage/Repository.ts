@@ -25,12 +25,12 @@ export class Repository<S extends BaseSchema> {
     this.variants = {};
   }
 
-  public insertDataFromFile(
+  public async insertDataFromFile(
     file: FileHandle,
   ) {
     const existingData = this.data || [];
 
-    const result = this.model.resourcesFromFile(file);
+    const result = await this.model.resourcesFromFile(file);
     if (!result) return [];
 
     const newData = Array.isArray(result) ? result : [result];
@@ -161,10 +161,6 @@ export class Repository<S extends BaseSchema> {
   }
 
   private async buildAttachments(resource: S) {
-    log(
-      `Writing attachments for repository ${this.modelName} slug ${resource.slug}`,
-    );
-
     const file = await openFile(`${resource.filename}${resource.extension}`);
 
     const getDestPath = (variant: string) =>

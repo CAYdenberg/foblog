@@ -1,4 +1,5 @@
 import { IM, z } from "../../../deps.ts";
+import { log } from "../../../log.ts";
 import { config } from "../../../plugin/config.ts";
 import { Model } from "../Model.ts";
 
@@ -74,6 +75,7 @@ export const image: Model<ImageTy> = {
   },
 
   getAttachments: async (_resource, file, getDestPath) => {
+    log(`Resizing ${file.filename}${file.extension}`);
     const sizes = await generateImageSizes(
       file.data,
       config.images.sizes,

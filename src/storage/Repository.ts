@@ -161,10 +161,6 @@ export class Repository<S extends BaseSchema> {
   }
 
   private async buildAttachments(resource: S) {
-    log(
-      `Writing attachments for repository ${this.modelName} slug ${resource.slug}`,
-    );
-
     const file = await openFile(`${resource.filename}${resource.extension}`);
 
     const getDestPath = (variant: string) =>

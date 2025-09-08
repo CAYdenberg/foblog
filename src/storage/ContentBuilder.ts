@@ -39,6 +39,8 @@ export class ContentBuilder {
       warnIfNoKv();
     }
 
+    this.repositories.forEach((repo) => repo.init());
+
     const start = Date.now();
 
     const promise = createOutDirIfNotExists().then(() =>

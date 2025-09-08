@@ -92,3 +92,21 @@ Deno.test("ContentBuilder: check resources", async () => {
 
   await Deno.remove(tmp, { recursive: true });
 });
+
+const modelForEmptyRepo = {
+  ...page,
+  resourcesFromFile: () => null,
+};
+
+Deno.test("ContentBuilder: empty repo", async () => {
+  const contentBuilder = new ContentBuilder(modelForEmptyRepo);
+
+  await contentBuilder.init();
+  await contentBuilder.buildAll();
+
+  const text = await Deno.readTextFile(path.join(tmp, "fob/repo/page.json"));
+  const pages: PageTy[] = JSON.parse(text);
+
+  assert.assertEquals(pages, []);
+  await Deno.remove(tmp, { recursive: true });
+});

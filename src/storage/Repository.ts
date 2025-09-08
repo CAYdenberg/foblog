@@ -17,6 +17,7 @@ export class Repository<S extends BaseSchema> {
   private model: Model<S>;
   private data: S[] | null;
   private variants: Record<string, string[]>;
+  private readFromDiskPromise?: Promise<S[]>;
 
   constructor(model: Model<S>) {
     this.modelName = model.name;
@@ -25,10 +26,18 @@ export class Repository<S extends BaseSchema> {
     this.variants = {};
   }
 
+  public init() {
+    this.data = [];
+  }
+
   public async insertDataFromFile(
     file: FileHandle,
   ) {
-    const existingData = this.data || [];
+    if (!this.data) {
+      throw new Error("RepoNotInitialized");
+    }
+
+    const existingData = this.data;
 
     const result = await this.model.resourcesFromFile(file);
     if (!result) return [];
@@ -147,17 +156,21 @@ export class Repository<S extends BaseSchema> {
     );
   }
 
-  public async readFromDisk(): Promise<S[]> {
-    // TODO: make sure this process runs only once, even if this func is
-    // called multiple times by different requests. Promise should resolve
-    // when first/only run is complete.
+  private readFromDisk(): Promise<S[]> {
+    if (this.readFromDiskPromise) return this.readFromDiskPromise;
 
     log(`Reading repository ${this.modelName}`);
 
-    const text = await Deno.readTextFile(
+    this.readFromDiskPromise = Deno.readTextFile(
       getIndicesPath(`${this.modelName}.json`),
-    );
-    return JSON.parse(text);
+    ).then(
+      (text) => JSON.parse(text),
+    ).catch(() => {
+      warn(`Unable to load repo ${this.modelName} from disk`);
+      return [];
+    });
+
+    return this.readFromDiskPromise;
   }
 
   private async buildAttachments(resource: S) {

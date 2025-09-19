@@ -1,13 +1,12 @@
-/// <reference no-default-lib="true" />
-/// <reference lib="dom" />
-/// <reference lib="dom.iterable" />
-/// <reference lib="dom.asynciterable" />
-/// <reference lib="deno.ns" />
+import { App, staticFiles } from "fresh";
 
-import "$std/dotenv/load.ts";
+export const app = new App()
+  // Add static file serving middleware
+  .use(staticFiles())
+  // Enable file-system based routing
+  .use((ctx) => {
+    console.log(Deno.env.get("NODE_ENV"));
 
-import { start } from "$fresh/server.ts";
-import manifest from "./fresh.gen.ts";
-import config from "./fresh.config.ts";
-
-await start(manifest, config);
+    return ctx.next();
+  })
+  .fsRoutes();

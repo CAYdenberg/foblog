@@ -1,5 +1,4 @@
-import { ResolvedFreshConfig } from "$fresh/server.ts";
-import { Author } from "../mod.ts";
+import { Author } from "../../mod.ts";
 import { stringifyQuery } from "../parsers/index.ts";
 
 export interface PluginConfig {
@@ -32,15 +31,13 @@ export interface PluginConfig {
     ) => string;
     permalink: (slug: string, width?: number) => string;
   };
-
-  freshConfig?: ResolvedFreshConfig;
 }
 
 const DEFAULT_CONFIG: PluginConfig = {
   logLevel: "verbose",
   contentDir: "content",
   contentWatchDebounceInterval: 1000,
-  outDir: "fob",
+  outDir: "_fresh/fob",
 
   posts: {
     permalink: (slug) => `/blog/${slug}`,
@@ -75,8 +72,10 @@ export type ConfigSetter =
 export let config: PluginConfig = DEFAULT_CONFIG;
 
 export const setConfig = (
-  configSetter: ConfigSetter,
+  configSetter?: ConfigSetter,
 ) => {
+  if (!configSetter) return DEFAULT_CONFIG;
+
   if (typeof configSetter === "function") {
     config = {
       ...configSetter(DEFAULT_CONFIG),
@@ -86,14 +85,6 @@ export const setConfig = (
   config = {
     ...DEFAULT_CONFIG,
     ...configSetter,
-  };
-  return config;
-};
-
-export const setFreshConfig = (freshConfig: ResolvedFreshConfig) => {
-  config = {
-    ...config,
-    freshConfig,
   };
   return config;
 };

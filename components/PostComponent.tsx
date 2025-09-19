@@ -1,17 +1,14 @@
-import { PageProps } from "$fresh/server.ts";
 import type { PostHandlerProps } from "foblog";
-import { CreateMd, Icon, PostHandler } from "foblog";
+import { CreateMd, Icon } from "foblog";
 
-import { postDate } from "../../lib/datetime.ts";
-import { Wrapper } from "../../components/Wrapper.tsx";
-import { ArrowLeft } from "../../components/icons.tsx";
-
-export const handler = PostHandler();
+import { postDate } from "../lib/datetime.ts";
+import { Wrapper } from "./Wrapper.tsx";
+import { ArrowLeft } from "./icons.tsx";
 
 const Md = CreateMd();
 
-export default function PostPage({ url, data }: PageProps<PostHandlerProps>) {
-  const { post } = data;
+export default function PostPage(props: PostHandlerProps) {
+  const { post, preloads, url } = props;
 
   return (
     <Wrapper
@@ -20,7 +17,7 @@ export default function PostPage({ url, data }: PageProps<PostHandlerProps>) {
       pageDescription={post.summary}
       pageSocialImage={post.image}
     >
-      <image
+      <img
         src={post.banner_image}
         alt={`Banner image for ${post.title}`}
       />
@@ -42,7 +39,7 @@ export default function PostPage({ url, data }: PageProps<PostHandlerProps>) {
         <hr className="my-4" />
 
         <div className="content">
-          <Md node={post.content} preloads={data.preloads} />
+          <Md node={post.content} preloads={preloads} />
         </div>
 
         <hr className="my-4" />

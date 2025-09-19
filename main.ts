@@ -1,16 +1,14 @@
 import { App, staticFiles } from "fresh";
-import { h } from "preact";
-import foblog from "./foblog.config.ts";
+import { foblog } from "./foblog.config.ts";
 import { BlogListHandler } from "foblog";
+import BlogListComponent from "./components/BlogListComponent.tsx";
 
 export const app = new App()
   // Add static file serving middleware
   .use(staticFiles())
   .get(
     "/blog",
-    foblog.handle(BlogListHandler({
-      render: (props) => <h1>{props.title}</h1>,
-    })),
+    foblog.handle(BlogListHandler(BlogListComponent)),
   )
   // Enable file-system based routing
   .fsRoutes();

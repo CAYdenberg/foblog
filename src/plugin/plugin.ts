@@ -1,53 +1,49 @@
 /// <reference lib="deno.unstable" />
 
-import { FreshContext, Plugin } from "$fresh/server.ts";
+import type { Context as FreshContext } from "fresh";
 import { image, page, post } from "../lib/index.ts";
 import { ContentBuilder } from "../storage/ContentBuilder.ts";
-import { Repository } from "../storage/Repository.ts";
-import { ConfigSetter, setConfig, setFreshConfig } from "./config.ts";
+import { AnyRepository, Repository } from "../storage/Repository.ts";
+import { ConfigSetter, setConfig } from "./config.ts";
 import {
   createFoblogContextDev,
   createFoblogContextPrebuilt,
 } from "./context.ts";
+import { FoblogContext, FoblogPluginConfig } from "./index.ts";
 
-let contentBuilder: ContentBuilder;
-const repos = {
-  post: new Repository(post),
-  page: new Repository(page),
-  image: new Repository(image),
-};
+export default class {
+  private config: FoblogPluginConfig;
+  private contentBuilder: ContentBuilder;
+  private repos: Record<string, AnyRepository>;
 
-const foblogMiddleware = async (_req: Request, ctx: FreshContext) => {
-  setFreshConfig(ctx.config);
+  constructor(config?: ConfigSetter) {
+    this.config = setConfig(config);
+    this.contentBuilder = new ContentBuilder(post, page, image);
+    this.repos = {
+      post: new Repository(post),
+      page: new Repository(page),
+      image: new Repository(image),
+    };
+  }
 
-  const context = ctx.config.dev
-    ? createFoblogContextDev(contentBuilder)
-    : createFoblogContextPrebuilt(repos);
+  public async build() {
+    await this.contentBuilder.init();
+    await this.contentBuilder.buildAll();
+  }
 
-  ctx.state = { ...ctx.state, ...context };
+  public handle(
+    handler: (
+      freshContext: FreshContext<unknown>,
+      foblogContext: FoblogContext,
+    ) => Promise<Response>,
+  ) {
+    return async (ctx: FreshContext<unknown>) => {
+      const foblogContext = Deno.env.get("NODE_ENV")
+        ? createFoblogContextDev(this.contentBuilder)
+        : createFoblogContextPrebuilt(this.repos);
 
-  return await ctx.next();
-};
-
-export default (config: ConfigSetter): Plugin => {
-  setConfig(config);
-  contentBuilder = new ContentBuilder(post, page, image);
-
-  return {
-    name: "foblog",
-
-    buildStart: async (freshConfig) => {
-      setFreshConfig(freshConfig);
-      await contentBuilder.init();
-      await contentBuilder.buildAll();
-    },
-
-    middlewares: [{ middleware: { handler: foblogMiddleware }, path: "" }],
-    islands: {
-      baseLocation: import.meta.url,
-      paths: [
-        "../lib/view/ImgLazy.tsx",
-      ],
-    },
-  };
-};
+      const response = await handler(ctx, foblogContext);
+      return response;
+    };
+  }
+}

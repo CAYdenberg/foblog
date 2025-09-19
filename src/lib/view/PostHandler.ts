@@ -1,4 +1,4 @@
-import { FreshContext, Handler } from "$fresh/server.ts";
+import { Context, FreshContext, HandlerFn as Handler } from "fresh";
 import { MdastNodeTy } from "../../parsers/index.ts";
 import { FoblogContext } from "../../plugin/context.ts";
 import { preloadAssembler } from "../../preload/index.ts";
@@ -8,7 +8,7 @@ import { getPost, PostTy } from "../index.ts";
 interface PostHandlerOptions {
   decodeUrl: (
     url: string | URL,
-    context: FreshContext<FoblogContext>,
+    context: Context<FoblogContext>,
   ) => string;
 }
 

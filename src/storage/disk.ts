@@ -25,7 +25,9 @@ export interface LsEntry {
 }
 export type Resource = LsEntry["resources"][number];
 
-export const getChecksum = async (data: Uint8Array): Promise<string> => {
+export const getChecksum = async (
+  data: Uint8Array<ArrayBuffer>,
+): Promise<string> => {
   const digest = await crypto.subtle.digest("SHA-256", data);
   return encodeHex(digest);
 };
@@ -113,9 +115,7 @@ export const resourcesToDelete = (
 };
 
 const getOutDir = () => {
-  const { freshConfig, outDir } = config;
-  if (!freshConfig?.build?.outDir) throw new Error("NoFreshConfigSetUp");
-  return path.join(freshConfig.build.outDir, outDir);
+  return config.outDir;
 };
 
 export const getAttachmentPath = (filename: string) => {
@@ -137,17 +137,14 @@ const createDirsRecursively = async (...paths: string[]) => {
 };
 
 export const createOutDirIfNotExists = async () => {
-  const { freshConfig, outDir } = config;
-  if (!freshConfig?.build?.outDir) throw new Error("NoFreshConfigSetUp");
+  const { outDir } = config;
 
   await createDirsRecursively(
-    freshConfig.build.outDir,
-    outDir,
+    ...outDir.split("/"),
     ATTACHMENT_OUT_DIR,
   );
   await createDirsRecursively(
-    freshConfig.build.outDir,
-    outDir,
+    ...outDir.split("/"),
     REPO_OUT_DIR,
   );
 };

@@ -3,7 +3,7 @@
 import type { Context as FreshContext } from "fresh";
 import { image, page, post } from "../lib/index.ts";
 import { ContentBuilder } from "../storage/ContentBuilder.ts";
-import { AnyRepository, Repository } from "../storage/Repository.ts";
+import { Repository } from "../storage/Repository.ts";
 import { ConfigSetter, setConfig } from "./config.ts";
 import {
   createFoblogContextDev,
@@ -11,19 +11,21 @@ import {
 } from "./context.ts";
 import { FoblogContext, FoblogPluginConfig } from "./index.ts";
 
-export default class {
+class Foblog {
   private config: FoblogPluginConfig;
+  private content: FoblogContext;
   private contentBuilder: ContentBuilder;
-  private repos: Record<string, AnyRepository>;
 
   constructor(config?: ConfigSetter) {
     this.config = setConfig(config);
     this.contentBuilder = new ContentBuilder(post, page, image);
-    this.repos = {
-      post: new Repository(post),
-      page: new Repository(page),
-      image: new Repository(image),
-    };
+    this.content = Deno.env.get("NODE_ENV") === "development"
+      ? createFoblogContextDev(this.contentBuilder)
+      : createFoblogContextPrebuilt({
+        post: new Repository(post),
+        page: new Repository(page),
+        image: new Repository(image),
+      });
   }
 
   public async build() {
@@ -32,18 +34,13 @@ export default class {
   }
 
   public handle(
-    handler: (
-      freshContext: FreshContext<unknown>,
-      foblogContext: FoblogContext,
-    ) => Promise<Response>,
+    handler: (context: FreshContext<unknown>) => Promise<Response>,
   ) {
     return async (ctx: FreshContext<unknown>) => {
-      const foblogContext = Deno.env.get("NODE_ENV")
-        ? createFoblogContextDev(this.contentBuilder)
-        : createFoblogContextPrebuilt(this.repos);
-
-      const response = await handler(ctx, foblogContext);
+      const response = await handler(ctx);
       return response;
     };
   }
 }
+
+export default Foblog;

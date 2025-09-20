@@ -1,4 +1,4 @@
-import { Handler } from "$fresh/server.ts";
+import { Handler } from "fresh";
 import { FoblogContext } from "../../plugin/index.ts";
 import { BlogList, getBlogList, PaginationOptions } from "../model/index.ts";
 
@@ -9,7 +9,7 @@ export const BlogListHandler = (
 ): Handler<BlogListHandlerProps, FoblogContext> => {
   const getter = getBlogList(options);
 
-  return async (request, context) => {
+  return async (context) => {
     const blogList = await getter(context.state)(request.url);
     return context.render(blogList);
   };

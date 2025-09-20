@@ -5,7 +5,7 @@ import type { Root as MdastContent } from "../parsers/markdown/MdastNode.ts";
 import { ContentBuilder } from "../storage/ContentBuilder.ts";
 import type { AnyRepository } from "../storage/Repository.ts";
 
-export interface FoblogContext {
+export interface FoblogContent {
   getAll: <S extends BaseSchema>(type: string) => Promise<S[]>;
 
   getItem: <S extends BaseSchema>(
@@ -31,7 +31,7 @@ export interface FoblogContext {
 
 export const createFoblogContextPrebuilt = (
   repositories: Record<string, AnyRepository>,
-): FoblogContext => {
+): FoblogContent => {
   const getAll = (type: string) => {
     const repo = repositories[type];
     if (!repo) {
@@ -99,7 +99,7 @@ export const createFoblogContextPrebuilt = (
 
 export const createFoblogContextDev = (
   contentBuilder: ContentBuilder,
-): FoblogContext => {
+): FoblogContent => {
   contentBuilder.watch();
 
   const getAll = async <S extends BaseSchema>(type: string) => {

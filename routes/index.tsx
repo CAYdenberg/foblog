@@ -1,7 +1,12 @@
 import { useSignal } from "@preact/signals";
 import Counter from "../islands/Counter.tsx";
+import { HandlerFn, PageProps } from "fresh";
 
-export default function Home() {
+export const handler: HandlerFn<unknown, string> = () => {
+  return { data: "casey" };
+};
+
+export default function Home(props: PageProps<string>) {
   const count = useSignal(3);
 
   return (
@@ -14,7 +19,7 @@ export default function Home() {
           height="128"
           alt="the Fresh logo: a sliced lemon dripping with juice"
         />
-        <h1 class="text-4xl font-bold">Welcome to Fresh</h1>
+        <h1 class="text-4xl font-bold">Welcome to {props.data}</h1>
         <p class="my-4">
           Try updating this message in the
           <code class="mx-2">./routes/index.tsx</code> file, and refresh.

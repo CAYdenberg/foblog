@@ -1,7 +1,7 @@
 /// <reference lib="deno.unstable" />
 
 import type { Context as FreshContext } from "fresh";
-import { page, post } from "../lib/index.ts";
+import { image, page, post } from "../lib/index.ts";
 import { ContentBuilder } from "../storage/ContentBuilder.ts";
 import { Repository } from "../storage/Repository.ts";
 import { ConfigSetter, setConfig } from "./config.ts";
@@ -24,13 +24,13 @@ class Foblog {
 
   constructor(config?: ConfigSetter) {
     this.config = setConfig(config);
-    this.contentBuilder = new ContentBuilder(post, page);
-    this.context = Deno.env.get("NODE_ENV") === "development"
+    this.contentBuilder = new ContentBuilder(post, page, image);
+    this.context = this.config.isDev
       ? createFoblogContextDev(this.contentBuilder)
       : createFoblogContextPrebuilt({
         post: new Repository(post),
         page: new Repository(page),
-        // image: new Repository(image),
+        image: new Repository(image),
       });
   }
 

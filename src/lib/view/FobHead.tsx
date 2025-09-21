@@ -1,4 +1,5 @@
-import { Fragment, type FunctionComponent, Head } from "../../deps.ts";
+import { Fragment, type FunctionComponent } from "../../deps.ts";
+import { Head } from "fresh/runtime";
 import { config } from "../../plugin/config.ts";
 
 export interface FobHeadProps {
@@ -69,8 +70,6 @@ export const FobHead: FunctionComponent<FobHeadProps> = (props) => {
           </Fragment>
         )
         : null}
-
-      <link rel="stylesheet" type="text/css" href="/styles.css" />
     </Head>
   );
 };

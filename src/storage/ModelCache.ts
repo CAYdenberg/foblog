@@ -1,6 +1,8 @@
 import { log, warn } from "../log.ts";
 import type { BaseSchema, FileHandle, Model } from "../lib/index.ts";
-import { ContentRoot } from "foblog";
+import type { MdastNodeTy } from "../parsers/index.ts";
+
+type ContentRoot = MdastNodeTy.Root;
 
 let kv: Deno.Kv | undefined;
 try {

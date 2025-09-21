@@ -1,10 +1,10 @@
-import { Handler } from "$fresh/server.ts";
-import { FreshContext, z } from "../../deps.ts";
+import { Context, HandlerFn } from "fresh";
+import { z } from "../../deps.ts";
 import { warn } from "../../log.ts";
 import { getErrorMessage, HttpError } from "../../errors.ts";
 import { parseQuery } from "../../parsers/index.ts";
-import { FoblogContext } from "foblog";
-import { getImage } from "../index.ts";
+import { FoblogState } from "../../plugin/index.ts";
+import { ImageTy } from "../model/index.ts";
 
 interface ImageParams {
   slug: string;
@@ -14,7 +14,7 @@ interface ImageParams {
 interface ImageHandlerOptions {
   decodeUrl: (
     url: string | URL,
-    context: FreshContext<FoblogContext>,
+    context: Context<FoblogState>,
   ) => ImageParams;
 }
 
@@ -36,27 +36,51 @@ const defaultImageHandlerOptions: ImageHandlerOptions = {
 
 export const ImageHandler = (
   options?: Partial<ImageHandlerOptions>,
-): Handler<unknown, FoblogContext> => {
+): HandlerFn<unknown, FoblogState> => {
   const { decodeUrl } = {
     ...defaultImageHandlerOptions,
     ...options,
   };
 
-  return async (request, context: FreshContext<FoblogContext>) => {
+  return async (context: Context<FoblogState>) => {
     let params: ImageParams;
     try {
-      params = decodeUrl(request.url, context);
+      params = decodeUrl(context.req.url, context);
     } catch (err) {
       warn(getErrorMessage(err));
-      return new HttpError(
-        400,
-        `Unable to parse URL ${request.url}`,
-      ).toHttp();
+      throw new HttpError(400);
     }
 
-    const attachment = await getImage(context.state)(params.slug, params.width);
+    const fob = context.state.foblog;
+
+    const data = await fob.getItem<ImageTy>("image", params.slug);
+    if (!data) {
+      throw new HttpError(404);
+    }
+
+    if (typeof params.width === "undefined" || !data.variants) {
+      const attachment = await fob.getAttachment("image", data, null);
+      if (!attachment) {
+        throw new HttpError(404);
+      }
+      return new Response(attachment);
+    }
+
+    // sort the sizes in ASC order, then find the first one that is larger
+    // than the reqeusted size.
+    const neededSize = data.variants?.map((variant) => parseInt(variant))
+      .filter((size) => !isNaN(size)).sort((a, b) => a - b).find((size) =>
+        size >= params.width!
+      );
+
+    const attachment = await fob.getAttachment(
+      "image",
+      data,
+      neededSize?.toString() || null,
+    );
+
     if (!attachment) {
-      return new HttpError(404).toHttp();
+      throw new HttpError(404);
     }
     return new Response(attachment);
   };

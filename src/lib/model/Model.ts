@@ -1,5 +1,7 @@
 import { z } from "../../deps.ts";
-import { ContentRoot } from "../../mod.ts";
+import { MdastNodeTy } from "../../parsers/index.ts";
+
+type ContentRoot = MdastNodeTy.Root;
 
 export interface FileHandle {
   filename: string;

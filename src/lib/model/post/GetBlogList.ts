@@ -6,7 +6,7 @@ import {
   PaginationOptions,
   type PostTy,
 } from "../index.ts";
-import { processMetadataXRef } from "../../../parsers/index.ts";
+import { processMetadataXRef } from "../../../parsers/markdown/metadata.ts";
 
 export type GetBlogListOptions = PaginationOptions;
 
@@ -15,7 +15,7 @@ export interface BlogListProps {
   pagination: Pagination;
 }
 
-export const GetBLogList = (
+export const GetBlogList = (
   options?: Partial<GetBlogListOptions>,
 ): HandlerFn<BlogListProps, FoblogState> => {
   const paginate = Paginate(options);
@@ -39,7 +39,10 @@ export const GetBLogList = (
     );
 
     return {
-      data: { posts, pagination },
+      data: {
+        posts,
+        pagination,
+      },
     };
   };
 };

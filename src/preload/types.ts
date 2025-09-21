@@ -1,13 +1,13 @@
-import { FreshContext } from "$fresh/server.ts";
+import { Context } from "fresh";
 import { HttpError } from "../errors.ts";
 import { MdastNodeTy } from "../parsers/index.ts";
-import { FoblogContext } from "../plugin/index.ts";
+import { FoblogState } from "../plugin/index.ts";
 
 export interface PreloadPending {
   key: string;
   query: (
     request: Request,
-    context: FreshContext<FoblogContext>,
+    context: Context<FoblogState>,
   ) => Promise<MdastNodeTy.MdastNode>;
 }
 

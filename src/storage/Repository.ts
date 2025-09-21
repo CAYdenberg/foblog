@@ -194,7 +194,7 @@ export class Repository<S extends BaseSchema> {
   private checkItem(item: S) {
     const { success, error } = this.model.schema.safeParse(item);
     if (success) return;
-    if (config.freshConfig?.dev) {
+    if (config.isDev) {
       warn(
         `Model ${this.modelName} Resource ${item.slug} did not match schema`,
       );

@@ -1,10 +1,12 @@
-import { getBlogList, PaginationOptions } from "../model/index.ts";
 import { CreateMd, ShortcodeComponents } from "./CreateMd.tsx";
 import { config } from "../../plugin/config.ts";
-import { Handler } from "$fresh/server.ts";
+import { HandlerFn } from "fresh";
 import { renderToString } from "../../deps.ts";
-import { FoblogContext, getPost } from "foblog";
 import { getPlainText } from "../../parsers/markdown/metadata.ts";
+import { FoblogState } from "../../plugin/index.ts";
+import { GetBlogList, PaginationOptions } from "../model/index.ts";
+import { BlogListProps, PostTy } from "../index.ts";
+import { MdastNodeTy } from "../../parsers/index.ts";
 
 interface JsonFeedHandlerOptions extends Omit<PaginationOptions, "decodeUrl"> {
   shortcodeComponents: ShortcodeComponents;
@@ -18,17 +20,21 @@ const jsonFeedHandlerOptionsDefaults: JsonFeedHandlerOptions = {
 
 export const JsonFeedHandler = (
   options: Partial<JsonFeedHandlerOptions> = {},
-): Handler<unknown, FoblogContext> => {
+): HandlerFn<unknown, FoblogState> => {
   const _options = {
     ...jsonFeedHandlerOptionsDefaults,
     ...options,
   };
+  const getBlogList = GetBlogList(options);
 
-  const getBlogListFromUrl = getBlogList(_options);
-
-  return async (req, ctx) => {
-    const { posts, pagination } = await getBlogListFromUrl(ctx.state)(req.url);
-    const getPostBySlug = getPost(ctx.state);
+  return async (ctx) => {
+    const data = await getBlogList(ctx);
+    const { posts, pagination } = data as unknown as BlogListProps;
+    const getPostBySlug = (slug: string) =>
+      ctx.state.foblog.getItem<PostTy & { content: MdastNodeTy.Root }>(
+        "post",
+        slug,
+      );
 
     const Md = CreateMd({ shortcodeComponents: _options.shortcodeComponents });
     const createItem = (slug: string) =>

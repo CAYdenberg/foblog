@@ -1,2 +1,2 @@
 export * from "./page.ts";
-export * from "./getters.ts";
+export * from "./GetPage.ts";

@@ -1,10 +1,10 @@
-import type { LucideProps } from "npm:lucide-preact@0.525.0";
+import type { LucideProps } from "npm:lucide-preact@0.544.0";
 import type { FunctionComponent } from "../../deps.ts";
 
-export { ChevronFirst } from "npm:lucide-preact@0.525.0";
-export { ChevronLast } from "npm:lucide-preact@0.525.0";
-export { ChevronLeft } from "npm:lucide-preact@0.525.0";
-export { ChevronRight } from "npm:lucide-preact@0.525.0";
+export { ChevronFirst } from "npm:lucide-preact@0.544.0";
+export { ChevronLast } from "npm:lucide-preact@0.544.0";
+export { ChevronLeft } from "npm:lucide-preact@0.544.0";
+export { ChevronRight } from "npm:lucide-preact@0.544.0";
 
 interface Props {
   // deno-lint-ignore no-explicit-any

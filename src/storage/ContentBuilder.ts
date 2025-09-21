@@ -35,7 +35,7 @@ export class ContentBuilder {
   public init(): Promise<LsEntry[]> {
     if (this.initPromise) return this.initPromise;
 
-    if (config.freshConfig?.dev) {
+    if (config.isDev) {
       warnIfNoKv();
     }
 

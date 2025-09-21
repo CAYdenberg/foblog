@@ -3,13 +3,6 @@ export { parse as parseYaml } from "https://deno.land/std@0.221.0/yaml/mod.ts";
 export * as path from "https://deno.land/std@0.221.0/path/mod.ts";
 export * as assert from "https://deno.land/std@0.221.0/assert/mod.ts";
 
-// fresh
-export type {
-  FreshContext,
-  Handler,
-} from "https://deno.land/x/fresh@1.7.3/server.ts";
-export { Head } from "https://deno.land/x/fresh@1.7.3/runtime.ts";
-
 // preact
 export type { ComponentChildren, FunctionComponent } from "preact";
 export { Fragment } from "preact";

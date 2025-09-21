@@ -2,6 +2,7 @@ import { Author } from "../../mod.ts";
 import { stringifyQuery } from "../parsers/index.ts";
 
 export interface PluginConfig {
+  isDev: boolean;
   logLevel: "warn" | "verbose" | false;
   contentDir: string;
   contentWatchDebounceInterval: number;
@@ -34,6 +35,7 @@ export interface PluginConfig {
 }
 
 const DEFAULT_CONFIG: PluginConfig = {
+  isDev: Deno.env.has("NODE_ENV") && Deno.env.get("NODE_ENV") === "development",
   logLevel: "verbose",
   contentDir: "content",
   contentWatchDebounceInterval: 1000,

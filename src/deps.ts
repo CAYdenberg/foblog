@@ -20,14 +20,12 @@ export * as QueryString from "https://deno.land/x/querystring@v1.0.2/mod.js";
 
 export { slugify } from "https://deno.land/x/slugify@0.3.0/mod.ts";
 
-export { datetime } from "https://deno.land/x/ptera@v1.0.2/mod.ts";
-
 // markdown utils
-export { unified } from "https://esm.sh/unified@11.0.5";
-export { default as remarkParse } from "https://esm.sh/remark-parse@11.0.0";
-export { default as remarkFrontmatter } from "https://esm.sh/remark-frontmatter@5.0.0";
-export { default as remarkDirective } from "https://esm.sh/remark-directive@3.0.0";
-export { visit } from "https://esm.sh/unist-util-visit@5.0.0";
+export { unified } from "npm:unified@11.0.5";
+export { default as remarkParse } from "npm:remark-parse@11.0.0";
+export { default as remarkFrontmatter } from "npm:remark-frontmatter@5.0.0";
+export { default as remarkDirective } from "npm:remark-directive@3.0.0";
+export { visit } from "npm:unist-util-visit@5.0.0";
 
 // image utils
-export * as IM from "https://deno.land/x/imagemagick_deno@0.0.31/mod.ts";
+export * as IM from "npm:@imagemagick/magick-wasm@0.0.31";

@@ -19,11 +19,16 @@ export const getBlogList = (options: Partial<PaginationOptions> = {}) => {
       url?: string | URL | null,
     ): Promise<BlogList> => {
       const all = await data.getAll<PostTy>("post");
-      const pagination = paginate(all, url);
+      const sorted = all.slice().sort((a, b) => {
+        return (b.date_published! < a.date_published!)
+          ? -1
+          : ((b.date_published! > a.date_published!) ? 1 : 0);
+      });
+      const pagination = paginate(sorted, url);
 
       // decorate posts with full URLs from image and banner_image
       const posts = await Promise.all(
-        all.slice(pagination.params.skip, pagination.params.limit + 1).map(
+        sorted.slice(pagination.params.skip, pagination.params.limit + 1).map(
           async (model) => {
             const [image, banner_image] = await Promise.all([
               xrefProcessor(model.image),
